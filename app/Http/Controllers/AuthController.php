@@ -43,12 +43,21 @@ class AuthController extends Controller
         );
 
         $otp = new Otp();
-        $otp->generate($phone, 'numeric', 6, 10);
+        $otpCode = $otp->generate($phone, 'numeric', 6, 10);
+
+        $apiKey = config('services.ubill.api_key');
+        $brandId = config('services.ubill.brand_id');
+        $message = urlencode("{$otpCode->token}");
+
+        $phone = str_replace('+', '', $phone);
+        $url = "https://ubill.ge/sms/send?key={$apiKey}&brandID={$brandId}&numbers={$phone}&text={$message}&stopList=false";
+        $response = file_get_contents($url);
 
         return response()->json([
             'status' => 'ok',
             'message' => 'OTP generated. For testing, check the otps table.',
             'user_exists' => (bool) $user->wasRecentlyCreated === false,
+            'response' => $response,
         ]);
     }
 

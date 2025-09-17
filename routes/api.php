@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/forms', [AdminController::class, 'index']);
+    Route::get('/forms/{id}', [AdminController::class, 'show']);
     Route::put('/forms/{id}/status', [AdminController::class, 'updateFormStatus']);
 });
 

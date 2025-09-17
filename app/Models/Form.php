@@ -10,7 +10,7 @@ class Form extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'title', 'slug', 'status', 'description', 'input_one', 'input_two', 'input_three', 'schema',
+        'user_id', 'title', 'slug', 'status', 'description', 'input_one', 'input_two', 'input_three', 'schema', 'attachment_url',
     ];
 
     protected $casts = [
@@ -19,13 +19,16 @@ class Form extends Model
     ];
 
     const STATUS_UNOPENED = 'unopened';
-    const STATUS_SEEN = 'seen';
+    const STATUS_UNDER_REVIEW = 'under_review';
+    const STATUS_IN_PROGRESS = 'in_progress';
     const STATUS_COMPLETED = 'completed';
 
     public static function getStatuses()
     {
         return [
             self::STATUS_UNOPENED,
+            self::STATUS_UNDER_REVIEW,
+            self::STATUS_IN_PROGRESS,
             self::STATUS_COMPLETED,
         ];
     }

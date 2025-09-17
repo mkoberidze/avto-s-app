@@ -16,10 +16,16 @@ class AdminController extends Controller
         return response()->json($forms);
     }
 
+    public function show(int $id)
+    {
+        $form = Form::with('user:id,phone')->findOrFail($id);
+        return response()->json($form);
+    }
+
     public function updateFormStatus(Request $request, int $id)
     {
         $data = $request->validate([
-            'status' => ['required', 'string', 'in:unopened,seen,completed'],
+            'status' => ['required', 'string', 'in:unopened,under_review,in_progress,completed'],
         ]);
 
         $form = Form::findOrFail($id);

@@ -34,5 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'ubill' => [
+        'api_key' => env('UBILL_API_KEY'),
+        'brand_id' => env('UBILL_BRAND_ID'),
+    ],
 
 ];

@@ -24,8 +24,9 @@ class FormController extends Controller
         $data = $request->validate([
             'title' => ['required','string','max:255'],
             'input_one' => ['required','string','max:255'],
-            'input_two' => ['required','string','max:255'],
+            'input_two' => ['required','string','max:2000'],
             'input_three' => ['required','string','max:255'],
+            'attachment' => ['required','file','mimetypes:application/pdf,application/octet-stream,image/jpeg,image/png,image/webp,application/acad,application/x-dwg','max:20480'],
         ]);
 
         $slugBase = Str::slug($data['title']);
@@ -35,7 +36,7 @@ class FormController extends Controller
             $slug = $slugBase.'-'.$i++;
         }
 
-        $form = Form::create([
+        $formData = [
             'user_id' => $user->id,
             'title' => $data['title'],
             'slug' => $slug,
@@ -43,7 +44,13 @@ class FormController extends Controller
             'input_one' => $data['input_one'],
             'input_two' => $data['input_two'],
             'input_three' => $data['input_three'],
-        ]);
+        ];
+
+        // attachment is required, validated above
+        $path = $request->file('attachment')->store('attachments', 'public');
+        $formData['attachment_url'] = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+
+        $form = Form::create($formData);
 
         return response()->json($form, 201);
     }
@@ -61,11 +68,16 @@ class FormController extends Controller
         $form = Form::where('user_id', $user->id)->findOrFail($id);
         $data = $request->validate([
             'title' => ['sometimes','string','max:255'],
-            'status' => ['sometimes','string','in:unopened,seen,completed'],
+            'status' => ['sometimes','string','in:unopened,under_review,in_progress,completed'],
             'input_one' => ['sometimes','string','max:255'],
-            'input_two' => ['sometimes','string','max:255'],
+            'input_two' => ['sometimes','string','max:2000'],
             'input_three' => ['sometimes','string','max:255'],
+            'attachment' => ['sometimes','file','mimetypes:application/pdf,application/octet-stream,image/jpeg,image/png,image/webp,application/acad,application/x-dwg','max:20480'],
         ]);
+        if ($request->hasFile('attachment')) {
+            $path = $request->file('attachment')->store('attachments', 'public');
+            $data['attachment_url'] = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        }
         $form->fill($data)->save();
         return response()->json($form);
     }

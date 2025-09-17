@@ -6,7 +6,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// SPA catch-all to let React Router handle client routes (exclude /api/*)
+// SPA catch-all to let React Router handle client routes (exclude /api/* and /storage/*)
 Route::get('/{any}', function () {
     return view('welcome');
-})->where('any', '^(?!api).*$');
+})->where('any', '^(?!api)(?!storage)(?!favicon\.ico)(?!robots\.txt).*$');
