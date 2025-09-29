@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-export default function Carousel({ slides = [], autoPlay = true, intervalMs = 4500, className = '', heightClass = 'h-56 sm:h-72 lg:h-[22rem] xl:h-[26rem] max-h-[70vh]' }) {
+export default function Carousel({ slides = [], autoPlay = true, intervalMs = 4500, className = '', heightClass = 'h-56 sm:h-72 lg:h-[22rem] xl:h-[26rem] max-h-[70vh]', onSlideClick = null }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const safeSlides = useMemo(() => Array.isArray(slides) ? slides.filter(Boolean) : [], [slides]);
     const numSlides = safeSlides.length;
@@ -33,8 +33,14 @@ export default function Carousel({ slides = [], autoPlay = true, intervalMs = 45
                     const imageUrl = slide.imageUrl || '';
                     const isSvg = typeof imageUrl === 'string' && imageUrl.toLowerCase().endsWith('.svg');
                     const imageFitClass = isSvg ? 'object-contain' : 'object-cover';
+                    const clickable = typeof onSlideClick === 'function';
+                    function handleClick() {
+                        if (clickable) {
+                            onSlideClick(slide, idx);
+                        }
+                    }
                     return (
-                        <div key={idx} className="relative w-full h-full shrink-0 grow-0 basis-full">
+                        <div key={idx} className={`relative w-full h-full shrink-0 grow-0 basis-full ${clickable ? 'cursor-pointer' : ''}`} onClick={handleClick} role={clickable ? 'button' : undefined} tabIndex={clickable ? 0 : undefined} onKeyDown={clickable ? (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); handleClick(); } } : undefined}>
                             {isSvg ? (
                                 <div className="flex h-full w-full items-center justify-center bg-white">
                                     <img

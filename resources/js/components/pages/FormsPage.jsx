@@ -16,6 +16,20 @@ export default function FormsPage() {
     const [contact, setContact] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    // Read query params to optionally auto-start creation and preselect direction
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const shouldCreate = params.get('create') === '1' || params.get('create') === 'true';
+        const presetDirection = (params.get('direction') || '').toLowerCase();
+        if (shouldCreate) {
+            setCreating(true);
+            setStep(1);
+            if (presetDirection && ['fire','cctv','access'].includes(presetDirection)) {
+                setDirection(presetDirection);
+            }
+        }
+    }, [window.location.search]);
+
     // Open login modal after render if user is not authenticated
     useEffect(() => {
         if (!isAuthenticated) {

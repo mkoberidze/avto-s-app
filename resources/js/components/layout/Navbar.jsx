@@ -29,9 +29,9 @@ export default function Navbar() {
                 </Link>
 
                 <nav className="hidden md:flex items-center gap-6 text-sm text-[#475569]">
-                <a href="#services" className="hover:text-[#0B1220] transition">{t('nav.services')}</a>
-                    <a href="#about" className="hover:text-[#0B1220] transition">{t('nav.about')}</a>
-                    <a href="#contact" className="hover:text-[#0B1220] transition">{t('nav.contact')}</a>
+                    <Link to="/services" className="hover:text-[#0B1220] transition">{t('nav.services')}</Link>
+                    <Link to="/about" className="hover:text-[#0B1220] transition">{t('nav.about')}</Link>
+                    <Link to="/contact" className="hover:text-[#0B1220] transition">{t('nav.contact')}</Link>
                     {user?.hasRole && user.hasRole('admin') && (
                         <Link to="/admin" className="hover:text-[#0B1220] transition">{t('nav.admin')}</Link>
                     )}
@@ -70,7 +70,9 @@ export default function Navbar() {
                     </div>
                     {isAuthenticated ? (
                         <div className="flex items-center gap-3">
-                            <span className="hidden sm:inline text-sm text-[#64748B]">{user?.phone}</span>
+                            <Link to="/forms" className="hidden sm:inline text-sm text-[#64748B] hover:text-[#0B1220] transition" title="Go to your forms">
+                                {user?.phone}
+                            </Link>
                             <button className="inline-flex items-center text-sm px-4 py-2 rounded-md border border-black/10 bg-white hover:bg-gray-50 transition" onClick={handleLogout}>
                                 Sign out
                             </button>

@@ -50,7 +50,7 @@ class AuthController extends Controller
         $message = urlencode("{$otpCode->token}");
 
         $phone = str_replace('+', '', $phone);
-        $url = "https://ubill.ge/sms/send?key={$apiKey}&brandID={$brandId}&numbers={$phone}&text={$message}&stopList=false";
+        $url = "https://api.ubill.dev/v1/sms/send?key={$apiKey}&brandID={$brandId}&numbers={$phone}&text={$message}&stopList=false";
         $response = file_get_contents($url);
 
         return response()->json([

@@ -67,7 +67,10 @@ export default function AdminPanel() {
     return (
         <main className="pt-24 sm:pt-28">
             <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <h1 className="text-2xl font-semibold text-[#111827] mb-6">{t('admin.title')}</h1>
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-2xl font-semibold text-[#111827]">{t('admin.title')}</h1>
+                    <Link to="/admin/pages" className="text-sm px-3 py-1.5 rounded border border-black/10 hover:border-black/30">{t('admin.manage_pages')}</Link>
+                </div>
 
                 <div className="grid lg:grid-cols-3 gap-6">
                     {/* Unopened Forms */}

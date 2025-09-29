@@ -53,6 +53,14 @@ const messages = {
         'forms.signin_needed': 'Please sign in to view your forms.',
         'forms.sign_in': 'Sign in',
         'forms.your_forms': 'Your Forms',
+        'admin.manage_pages': 'Manage Pages',
+
+        'services.title': 'Our Services',
+        'services.body': 'Describe your services here. This text can be managed by admin.',
+        'about.title': 'About Us',
+        'about.body': 'Write about the company here. This text can be managed by admin.',
+        'contact.title': 'Contact',
+        'contact.body': 'Provide contact information here. This text can be managed by admin.',
 
         'details.edit': 'Edit',
         'details.save': 'Save',
@@ -133,6 +141,14 @@ const messages = {
         'forms.signin_needed': 'გთხოვთ, შედით, რათა იხილოთ თქვენი განაცხადები.',
         'forms.sign_in': 'შესვლა',
         'forms.your_forms': 'თქვენი განაცხადები',
+        'admin.manage_pages': 'გვერდების მართვა',
+
+        'services.title': 'სერვისები',
+        'services.body': 'აქ აღწერეთ თქვენი სერვისები. ეს ტექსტი ადმინს შეუძლია შეცვალოს.',
+        'about.title': 'ჩვენს შესახებ',
+        'about.body': 'აქ დაწერეთ კომპანიის შესახებ. ეს ტექსტი ადმინს შეუძლია შეცვალოს.',
+        'contact.title': 'კონტაქტი',
+        'contact.body': 'აქ მიუთითეთ საკონტაქტო ინფორმაცია. ეს ტექსტი ადმინს შეუძლია შეცვალოს.',
 
         'details.edit': 'რედაქტირება',
         'details.save': 'შენახვა',
