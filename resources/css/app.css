@@ -14,4 +14,5 @@
 
 .lang-ka {
     font-family: var(--font-sans-ka);
+    text-transform: uppercase;
 }

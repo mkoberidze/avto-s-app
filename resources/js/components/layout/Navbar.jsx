@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import axios from 'axios';
@@ -9,6 +9,27 @@ export default function Navbar() {
     const { isAuthenticated, user, openPhoneModal, signOut } = useAuth();
     const { lang, setLang, toggleLang } = useLanguage();
     const t = useI18n();
+    const [logoUrl, setLogoUrl] = useState('/images/fireicon.svg');
+    const [faviconUrl, setFaviconUrl] = useState('/favicon.ico');
+
+    useEffect(() => {
+        axios.get('/api/settings')
+            .then(res => {
+                if (res.data.logo_url) {
+                    setLogoUrl(res.data.logo_url);
+                }
+                if (res.data.favicon_url) {
+                    setFaviconUrl(res.data.favicon_url);
+                    // Update the favicon link in the document
+                    const link = document.querySelector("link[rel~='icon']");
+                    if (link) {
+                        link.href = res.data.favicon_url;
+                    }
+                }
+            })
+            .catch(() => {});
+    }, []);
+
     const handleLogout = async () => {
         try {
             await axios.post('/api/auth/logout');
@@ -23,7 +44,7 @@ export default function Navbar() {
         <header className="w-full border-b border-black/5 bg-white/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 fixed top-0 left-0 z-30">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-3 group">
-                    <img src="/images/fireicon.svg" alt="Logo" className="h-8 w-8 object-contain"/>
+                    <img src={logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
                     <span
                         className="font-semibold text-[#0B1220] group-hover:opacity-90 transition">{t('nav.brand')}</span>
                 </Link>
@@ -31,7 +52,6 @@ export default function Navbar() {
                 <nav className="hidden md:flex items-center gap-6 text-sm text-[#475569]">
                     <Link to="/services" className="hover:text-[#0B1220] transition">{t('nav.services')}</Link>
                     <Link to="/about" className="hover:text-[#0B1220] transition">{t('nav.about')}</Link>
-                    <Link to="/contact" className="hover:text-[#0B1220] transition">{t('nav.contact')}</Link>
                     {user?.hasRole && user.hasRole('admin') && (
                         <Link to="/admin" className="hover:text-[#0B1220] transition">{t('nav.admin')}</Link>
                     )}

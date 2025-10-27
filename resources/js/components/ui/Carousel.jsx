@@ -20,11 +20,11 @@ export default function Carousel({ slides = [], autoPlay = true, intervalMs = 45
     }
 
     if (numSlides === 0) {
-        return <div className="w-full aspect-[16/9] rounded-xl bg-[#F3F4F6] border border-black/10" />;
+        return <div className="w-full aspect-[2/1] rounded-xl bg-[#F3F4F6] border border-black/10" />;
     }
 
     return (
-        <div className={`relative w-full overflow-hidden rounded-xl border border-black/10 bg-black/5 ${heightClass} ${className}`}>
+        <div className={`relative w-full overflow-hidden rounded-xl border border-black/10 bg-gray-100 ${heightClass} ${className}`}>
             <div
                 className="flex h-full transition-transform duration-700 ease-out"
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -32,7 +32,6 @@ export default function Carousel({ slides = [], autoPlay = true, intervalMs = 45
                 {safeSlides.map((slide, idx) => {
                     const imageUrl = slide.imageUrl || '';
                     const isSvg = typeof imageUrl === 'string' && imageUrl.toLowerCase().endsWith('.svg');
-                    const imageFitClass = isSvg ? 'object-contain' : 'object-cover';
                     const clickable = typeof onSlideClick === 'function';
                     function handleClick() {
                         if (clickable) {
@@ -41,27 +40,14 @@ export default function Carousel({ slides = [], autoPlay = true, intervalMs = 45
                     }
                     return (
                         <div key={idx} className={`relative w-full h-full shrink-0 grow-0 basis-full ${clickable ? 'cursor-pointer' : ''}`} onClick={handleClick} role={clickable ? 'button' : undefined} tabIndex={clickable ? 0 : undefined} onKeyDown={clickable ? (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); handleClick(); } } : undefined}>
-                            {isSvg ? (
-                                <div className="flex h-full w-full items-center justify-center bg-white">
-                                    <img
-                                        src={imageUrl}
-                                        alt={slide.title || `Slide ${idx + 1}`}
-                                        className="max-h-[85%] max-w-[90%] object-contain"
-                                        crossOrigin="anonymous"
-                                        referrerPolicy="no-referrer"
-                                        loading={idx === 0 ? 'eager' : 'lazy'}
-                                    />
-                                </div>
-                            ) : (
-                                <img
-                                    src={imageUrl}
-                                    alt={slide.title || `Slide ${idx + 1}`}
-                                    className={`h-full w-full ${imageFitClass}`}
-                                    crossOrigin="anonymous"
-                                    referrerPolicy="no-referrer"
-                                    loading={idx === 0 ? 'eager' : 'lazy'}
-                                />
-                            )}
+                            <img
+                                src={imageUrl}
+                                alt={slide.title || `Slide ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                                crossOrigin="anonymous"
+                                referrerPolicy="no-referrer"
+                                loading={idx === 0 ? 'eager' : 'lazy'}
+                            />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
                             {(slide.title || slide.subtitle) && (
                                 <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">

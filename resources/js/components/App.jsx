@@ -11,9 +11,9 @@ import FormDetailsPage from './pages/FormDetailsPage.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import AdminFormDetail from './pages/AdminFormDetail.jsx';
 import AdminPagesEditor from './pages/AdminPagesEditor.jsx';
+import AdminSettings from './pages/AdminSettings.jsx';
 import ServicesPage from './pages/ServicesPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
-import ContactPage from './pages/ContactPage.jsx';
 
 function AppShell() {
     const { lang } = useLanguage();
@@ -27,11 +27,11 @@ function AppShell() {
                             <Route path="/" element={<LandingPage />} />
                             <Route path="/services" element={<ServicesPage />} />
                             <Route path="/about" element={<AboutPage />} />
-                            <Route path="/contact" element={<ContactPage />} />
                             <Route path="/forms" element={<ProtectedRoute><FormsPage /></ProtectedRoute>} />
                             <Route path="/forms/:id" element={<ProtectedRoute><FormDetailsPage /></ProtectedRoute>} />
                             <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                             <Route path="/admin/pages" element={<ProtectedRoute><AdminPagesEditor /></ProtectedRoute>} />
+                            <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
                             <Route path="/admin/form/:id" element={<ProtectedRoute><AdminFormDetail /></ProtectedRoute>} />
                         </Routes>
                     </div>

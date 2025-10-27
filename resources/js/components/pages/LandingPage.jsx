@@ -1,17 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { Link } from 'react-router-dom';
 import Carousel from '../ui/Carousel.jsx';
 import { useI18n } from '../../contexts/i18n.js';
+import axios from 'axios';
 
 export default function LandingPage() {
     const { openPhoneModal, isAuthenticated } = useAuth();
     const t = useI18n();
+    const [carouselImages, setCarouselImages] = useState(['/images/fire.svg', '/images/cctv.svg', '/images/access.svg']);
+
+    useEffect(() => {
+        axios.get('/api/settings')
+            .then(res => {
+                if (res.data.carousel_images && Array.isArray(JSON.parse(res.data.carousel_images))) {
+                    const images = JSON.parse(res.data.carousel_images);
+                    if (images.length > 0) {
+                        setCarouselImages(images);
+                    }
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     const slides = [
-        { imageUrl: '/images/fire.svg', title: t('landing.fire'), subtitle: '', direction: 'fire' },
-        { imageUrl: '/images/cctv.svg', title: t('landing.cctv'), subtitle: '', direction: 'cctv' },
-        { imageUrl: '/images/access.svg', title: t('landing.access'), subtitle: '', direction: 'access' }
+        { imageUrl: carouselImages[0] || '/images/fire.svg', title: t('landing.fire'), subtitle: '', direction: 'fire' },
+        { imageUrl: carouselImages[1] || '/images/cctv.svg', title: t('landing.cctv'), subtitle: '', direction: 'cctv' },
+        { imageUrl: carouselImages[2] || '/images/access.svg', title: t('landing.access'), subtitle: '', direction: 'access' }
     ];
 
     return (
@@ -45,7 +60,7 @@ export default function LandingPage() {
                         <div className="mt-6">
                             <Carousel
                                 slides={slides}
-                                heightClass="h-52 sm:h-64 lg:h-[20rem] xl:h-[24rem] max-h-[70vh]"
+                                heightClass="h-64 sm:h-80 lg:h-96 xl:h-[28rem]"
                                 onSlideClick={(slide)=>{
                                     const direction = slide?.direction || '';
                                     const url = direction ? `/forms?create=1&direction=${encodeURIComponent(direction)}` : '/forms?create=1';

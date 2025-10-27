@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
-const PAGE_SLUGS = ['services', 'about', 'contact'];
+const PAGE_SLUGS = ['services', 'about'];
 
 export default function AdminPagesEditor() {
     const [active, setActive] = useState('services');
     const [data, setData] = useState({
-        services: { title_en: '', title_ka: '', body_en: '', body_ka: '', sections: [] },
-        about: { title_en: '', title_ka: '', body_en: '', body_ka: '', sections: [] },
-        contact: { title_en: '', title_ka: '', body_en: '', body_ka: '', sections: [] },
+        services: { title_en: '', title_ka: '', subtitle_en: '', subtitle_ka: '', body_en: '', body_ka: '', sections: [] },
+        about: { title_en: '', title_ka: '', subtitle_en: '', subtitle_ka: '', body_en: '', body_ka: '', sections: [] },
     });
     const [saving, setSaving] = useState(false);
+    const [sectionFiles, setSectionFiles] = useState({ services: [], about: [] });
 
     useEffect(() => {
         PAGE_SLUGS.forEach((slug) => {
@@ -20,6 +22,8 @@ export default function AdminPagesEditor() {
                         setData(prev => ({ ...prev, [slug]: {
                             title_en: res.data.title_en || '',
                             title_ka: res.data.title_ka || '',
+                            subtitle_en: res.data.subtitle_en || '',
+                            subtitle_ka: res.data.subtitle_ka || '',
                             body_en: res.data.body_en || '',
                             body_ka: res.data.body_ka || '',
                             sections: Array.isArray(res.data.sections) ? res.data.sections : [],
@@ -35,7 +39,29 @@ export default function AdminPagesEditor() {
     async function save() {
         setSaving(true);
         try {
-            await axios.post(`/api/admin/pages/${active}`, current);
+            const formData = new FormData();
+            formData.append('title_en', current.title_en || '');
+            formData.append('title_ka', current.title_ka || '');
+            formData.append('subtitle_en', current.subtitle_en || '');
+            formData.append('subtitle_ka', current.subtitle_ka || '');
+            formData.append('body_en', current.body_en || '');
+            formData.append('body_ka', current.body_ka || '');
+            formData.append('sections', JSON.stringify(current.sections || []));
+            
+            // Append section images if any
+            const files = sectionFiles[active] || [];
+            files.forEach((file, index) => {
+                if (file) {
+                    formData.append(`section_images[${index}]`, file);
+                }
+            });
+            
+            await axios.post(`/api/admin/pages/${active}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            // Clear section files after successful save
+            setSectionFiles(prev => ({ ...prev, [active]: [] }));
         } finally {
             setSaving(false);
         }
@@ -47,6 +73,7 @@ export default function AdminPagesEditor() {
 
     function addSection() {
         setData(prev => ({ ...prev, [active]: { ...prev[active], sections: [...(prev[active].sections || []), { title_en: '', title_ka: '', body_en: '', body_ka: '' }] } }));
+        setSectionFiles(prev => ({ ...prev, [active]: [...(prev[active] || []), null] }));
     }
 
     function updateSection(index, field, value) {
@@ -56,12 +83,26 @@ export default function AdminPagesEditor() {
             return { ...prev, [active]: { ...prev[active], sections } };
         });
     }
+    
+    function updateSectionFile(index, file) {
+        setSectionFiles(prev => {
+            const files = [...(prev[active] || [])];
+            files[index] = file;
+            return { ...prev, [active]: files };
+        });
+    }
 
     function removeSection(index) {
         setData(prev => {
             const sections = [...(prev[active].sections || [])];
             sections.splice(index, 1);
             return { ...prev, [active]: { ...prev[active], sections } };
+        });
+        // Also remove the associated file
+        setSectionFiles(prev => {
+            const files = [...(prev[active] || [])];
+            files.splice(index, 1);
+            return { ...prev, [active]: files };
         });
     }
 
@@ -90,13 +131,21 @@ export default function AdminPagesEditor() {
                             <label className="block text-xs text-[#6b7280] mb-1">Title (KA)</label>
                             <input value={current.title_ka || ''} onChange={(e)=>update('title_ka', e.target.value)} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
                         </div>
+                        <div>
+                            <label className="block text-xs text-[#6b7280] mb-1">Subtitle (EN)</label>
+                            <input value={current.subtitle_en || ''} onChange={(e)=>update('subtitle_en', e.target.value)} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-[#6b7280] mb-1">Subtitle (KA)</label>
+                            <input value={current.subtitle_ka || ''} onChange={(e)=>update('subtitle_ka', e.target.value)} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
+                        </div>
                         <div className="sm:col-span-1">
                             <label className="block text-xs text-[#6b7280] mb-1">Body (EN)</label>
-                            <textarea value={current.body_en || ''} onChange={(e)=>update('body_en', e.target.value)} rows={10} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
+                            <ReactQuill theme="snow" value={current.body_en || ''} onChange={(html)=>update('body_en', html)} />
                         </div>
                         <div className="sm:col-span-1">
                             <label className="block text-xs text-[#6b7280] mb-1">Body (KA)</label>
-                            <textarea value={current.body_ka || ''} onChange={(e)=>update('body_ka', e.target.value)} rows={10} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
+                            <ReactQuill theme="snow" value={current.body_ka || ''} onChange={(html)=>update('body_ka', html)} />
                         </div>
                     </div>
 
@@ -110,20 +159,35 @@ export default function AdminPagesEditor() {
                                 <div key={idx} className="border border-black/10 rounded p-3 bg-gray-50">
                                     <div className="grid sm:grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-xs text-[#6b7280] mb-1">Subtitle (EN)</label>
+                                            <label className="block text-xs text-[#6b7280] mb-1">Title (EN)</label>
                                             <input value={sec.title_en || ''} onChange={(e)=>updateSection(idx, 'title_en', e.target.value)} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-[#6b7280] mb-1">Subtitle (KA)</label>
+                                            <label className="block text-xs text-[#6b7280] mb-1">Title (KA)</label>
                                             <input value={sec.title_ka || ''} onChange={(e)=>updateSection(idx, 'title_ka', e.target.value)} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
                                         </div>
                                         <div>
                                             <label className="block text-xs text-[#6b7280] mb-1">Body (EN)</label>
-                                            <textarea value={sec.body_en || ''} onChange={(e)=>updateSection(idx, 'body_en', e.target.value)} rows={6} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
+                                            <ReactQuill theme="snow" value={sec.body_en || ''} onChange={(html)=>updateSection(idx, 'body_en', html)} />
                                         </div>
                                         <div>
                                             <label className="block text-xs text-[#6b7280] mb-1">Body (KA)</label>
-                                            <textarea value={sec.body_ka || ''} onChange={(e)=>updateSection(idx, 'body_ka', e.target.value)} rows={6} className="w-full border border-black/10 rounded px-3 py-2 text-sm" />
+                                            <ReactQuill theme="snow" value={sec.body_ka || ''} onChange={(html)=>updateSection(idx, 'body_ka', html)} />
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-xs text-[#6b7280] mb-1">Service Icon (SVG or Image)</label>
+                                            {sec.image_url && (
+                                                <div className="mb-2">
+                                                    <img src={sec.image_url} alt="Current icon" className="h-12 w-12 object-contain bg-white p-1 border border-black/10 rounded" />
+                                                </div>
+                                            )}
+                                            <input 
+                                                type="file" 
+                                                accept="image/*,.svg" 
+                                                onChange={(e) => updateSectionFile(idx, e.target.files?.[0] || null)} 
+                                                className="w-full text-xs"
+                                            />
+                                            <p className="text-xs text-[#6b7280] mt-1">Upload an icon for this service (optional)</p>
                                         </div>
                                     </div>
                                     <div className="mt-2 text-right">

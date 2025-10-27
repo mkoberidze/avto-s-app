@@ -11,7 +11,7 @@ class Page extends Model
 
     protected $fillable = [
         'slug',
-        'title_en', 'title_ka',
+        'title_en', 'title_ka', 'subtitle_en', 'subtitle_ka',
         'body_en', 'body_ka',
         'sections',
     ];

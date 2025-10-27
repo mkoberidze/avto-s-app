@@ -69,7 +69,10 @@ export default function AdminPanel() {
             <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between mb-6">
                     <h1 className="text-2xl font-semibold text-[#111827]">{t('admin.title')}</h1>
-                    <Link to="/admin/pages" className="text-sm px-3 py-1.5 rounded border border-black/10 hover:border-black/30">{t('admin.manage_pages')}</Link>
+                    <div className="flex items-center gap-2">
+                        <Link to="/admin/pages" className="text-sm px-3 py-1.5 rounded border border-black/10 hover:border-black/30">{t('admin.manage_pages')}</Link>
+                        <Link to="/admin/settings" className="text-sm px-3 py-1.5 rounded border border-black/10 hover:border-black/30">Settings</Link>
+                    </div>
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-6">

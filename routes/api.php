@@ -6,6 +6,7 @@ use App\Http\Controllers\FormController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AdminPageController;
+use App\Http\Controllers\SettingsController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/otp/request', [AuthController::class, 'requestOtp']);
@@ -28,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
 // Public pages
 Route::get('pages/{slug}', [PageController::class, 'show']);
 
+// Public settings
+Route::get('settings', [SettingsController::class, 'index']);
+
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/forms', [AdminController::class, 'index']);
     Route::get('/forms/{id}', [AdminController::class, 'show']);
@@ -35,5 +39,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     // Admin manage pages
     Route::get('/pages/{slug}', [AdminPageController::class, 'get']);
     Route::post('/pages/{slug}', [AdminPageController::class, 'upsert']);
+    // Admin manage settings
+    Route::post('/settings/upload-logo', [SettingsController::class, 'uploadLogo']);
+    Route::post('/settings/upload-favicon', [SettingsController::class, 'uploadFavicon']);
+    Route::post('/settings/upload-carousel', [SettingsController::class, 'uploadCarouselImage']);
+    Route::get('/settings', [SettingsController::class, 'index']);
+    Route::post('/settings', [SettingsController::class, 'update']);
 });
 
