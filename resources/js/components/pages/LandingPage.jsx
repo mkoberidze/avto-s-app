@@ -8,7 +8,7 @@ import axios from 'axios';
 export default function LandingPage() {
     const { openPhoneModal, isAuthenticated } = useAuth();
     const t = useI18n();
-    const [carouselImages, setCarouselImages] = useState(['/images/fire.svg', '/images/cctv.svg', '/images/access.svg']);
+    const [carouselImages, setCarouselImages] = useState([]);
 
     useEffect(() => {
         axios.get('/api/settings')
@@ -24,10 +24,10 @@ export default function LandingPage() {
     }, []);
 
     const slides = [
-        { imageUrl: carouselImages[0] || '/images/fire.svg', title: t('landing.fire'), subtitle: '', direction: 'fire' },
-        { imageUrl: carouselImages[1] || '/images/cctv.svg', title: t('landing.cctv'), subtitle: '', direction: 'cctv' },
-        { imageUrl: carouselImages[2] || '/images/access.svg', title: t('landing.access'), subtitle: '', direction: 'access' }
-    ];
+        { imageUrl: carouselImages[0] || null, title: t('landing.fire'), subtitle: '', direction: 'fire' },
+        { imageUrl: carouselImages[1] || null, title: t('landing.cctv'), subtitle: '', direction: 'cctv' },
+        { imageUrl: carouselImages[2] || null, title: t('landing.access'), subtitle: '', direction: 'access' }
+    ].filter(slide => slide.imageUrl); // Only include slides with actual images
 
     return (
         <main className="py-8">
