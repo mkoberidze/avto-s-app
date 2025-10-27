@@ -2,8 +2,22 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 export default function Carousel({ slides = [], autoPlay = true, intervalMs = 4500, className = '', heightClass = 'h-56 sm:h-72 lg:h-[22rem] xl:h-[26rem] max-h-[70vh]', onSlideClick = null }) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [imagesLoaded, setImagesLoaded] = useState({});
     const safeSlides = useMemo(() => Array.isArray(slides) ? slides.filter(Boolean) : [], [slides]);
     const numSlides = safeSlides.length;
+
+    // Preload images
+    useEffect(() => {
+        safeSlides.forEach((slide, index) => {
+            if (slide.imageUrl && !imagesLoaded[slide.imageUrl]) {
+                const img = new Image();
+                img.onload = () => {
+                    setImagesLoaded(prev => ({ ...prev, [slide.imageUrl]: true }));
+                };
+                img.src = slide.imageUrl;
+            }
+        });
+    }, [safeSlides, imagesLoaded]);
 
     useEffect(() => {
         if (!autoPlay || numSlides <= 1) return;
@@ -38,15 +52,22 @@ export default function Carousel({ slides = [], autoPlay = true, intervalMs = 45
                             onSlideClick(slide, idx);
                         }
                     }
+                    const isLoaded = imagesLoaded[imageUrl];
                     return (
                         <div key={idx} className={`relative w-full h-full shrink-0 grow-0 basis-full ${clickable ? 'cursor-pointer' : ''}`} onClick={handleClick} role={clickable ? 'button' : undefined} tabIndex={clickable ? 0 : undefined} onKeyDown={clickable ? (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); handleClick(); } } : undefined}>
+                            {!isLoaded && (
+                                <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+                                    <div className="text-gray-400 text-sm">Loading...</div>
+                                </div>
+                            )}
                             <img
                                 src={imageUrl}
                                 alt={slide.title || `Slide ${idx + 1}`}
-                                className="w-full h-full object-cover"
+                                className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
                                 crossOrigin="anonymous"
                                 referrerPolicy="no-referrer"
                                 loading={idx === 0 ? 'eager' : 'lazy'}
+                                onLoad={() => setImagesLoaded(prev => ({ ...prev, [imageUrl]: true }))}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
                             {(slide.title || slide.subtitle) && (

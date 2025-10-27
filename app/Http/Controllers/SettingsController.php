@@ -79,7 +79,15 @@ class SettingsController extends Controller
             'index' => 'required|integer|min:0|max:2',
         ]);
 
-        $path = $request->file('carousel_image')->store('carousel', 'public');
+        $file = $request->file('carousel_image');
+        
+        // Optimize image if it's not SVG
+        if (!$file->getClientOriginalExtension() === 'svg') {
+            $path = $this->optimizeImage($file, 'carousel');
+        } else {
+            $path = $file->store('carousel', 'public');
+        }
+        
         // Use the full URL with current request scheme and host
         $url = url('storage/' . $path);
 
@@ -92,6 +100,13 @@ class SettingsController extends Controller
         }
 
         return response()->json(['carousel_images' => $carousel_images]);
+    }
+
+    private function optimizeImage($file, $directory)
+    {
+        // For now, just store the file as-is
+        // In production, you might want to install intervention/image or use a service like Cloudinary
+        return $file->store($directory, 'public');
     }
 }
 
