@@ -9,8 +9,8 @@ export default function Navbar() {
     const { isAuthenticated, user, openPhoneModal, signOut } = useAuth();
     const { lang, setLang, toggleLang } = useLanguage();
     const t = useI18n();
-    const [logoUrl, setLogoUrl] = useState('/images/fireicon.svg');
-    const [faviconUrl, setFaviconUrl] = useState('/favicon.ico');
+    const [logoUrl, setLogoUrl] = useState('');
+    const [faviconUrl, setFaviconUrl] = useState('');
 
     useEffect(() => {
         axios.get('/api/settings')
@@ -24,6 +24,12 @@ export default function Navbar() {
                     const link = document.querySelector("link[rel~='icon']");
                     if (link) {
                         link.href = res.data.favicon_url;
+                    }
+                } else {
+                    // Remove favicon if no custom one is set
+                    const link = document.querySelector("link[rel~='icon']");
+                    if (link) {
+                        link.remove();
                     }
                 }
             })
@@ -44,7 +50,11 @@ export default function Navbar() {
         <header className="w-full border-b border-black/5 bg-white/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 fixed top-0 left-0 z-30">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-3 group">
-                    <img src={logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
+                    {logoUrl ? (
+                        <img src={logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
+                    ) : (
+                        <div className="h-8 w-8 bg-gray-200 animate-pulse rounded"></div>
+                    )}
                     <span
                         className="font-semibold text-[#0B1220] group-hover:opacity-90 transition">{t('nav.brand')}</span>
                 </Link>
