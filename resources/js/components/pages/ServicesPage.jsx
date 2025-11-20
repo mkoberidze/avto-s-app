@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../../contexts/i18n.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import axios from 'axios';
@@ -12,6 +13,7 @@ export default function ServicesPage() {
     const t = useI18n();
     const { lang } = useLanguage();
     const [content, setContent] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         axios.get('/api/pages/services').then(res => setContent(res.data)).catch(()=>{});
@@ -58,9 +60,17 @@ export default function ServicesPage() {
                                 
                                 if (!sectionTitle && !sectionBody) return null;
 
+                                const handleCardClick = () => {
+                                    navigate('/forms?create=1');
+                                };
+
                                 return (
                                     <div key={i} className="group">
-                                        <div className="relative bg-white rounded-lg shadow-lg p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col">
+                                        <button
+                                            type="button"
+                                            onClick={handleCardClick}
+                                            className="relative bg-white rounded-lg shadow-lg p-8 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                        >
                                             {/* Icon Circle */}
                                             <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${
                                                 isOrange ? 'bg-orange-500' : 'bg-blue-600'
@@ -90,7 +100,7 @@ export default function ServicesPage() {
                                             
                                             {/* Hover Effect Overlay */}
                                             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none"></div>
-                                        </div>
+                                        </button>
                                     </div>
                                 );
                             })}
