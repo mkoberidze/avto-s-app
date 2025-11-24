@@ -19,7 +19,7 @@ function AppShell() {
     const { lang } = useLanguage();
     return (
         <BrowserRouter>
-            <div className={`min-h-screen bg-[#FAFAF9] flex flex-col ${lang === 'ka' ? 'lang-ka' : ''}`}>
+            <div className={`min-h-screen bg-[#FAFAF9] flex flex-col app-uppercase ${lang === 'ka' ? 'lang-ka' : ''}`}>
                 <Navbar />
                 <main className="flex-1 overflow-y-auto pt-16">
                     <div className="pb-20">

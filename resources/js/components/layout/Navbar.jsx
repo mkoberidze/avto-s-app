@@ -132,7 +132,7 @@ export default function Navbar() {
                                 {user?.phone}
                             </Link>
                             <button className="inline-flex items-center text-sm px-4 py-2 rounded-md border border-black/10 bg-white hover:bg-gray-50 transition" onClick={handleLogout}>
-                                Sign out
+                                {t('nav.sign_out')}
                             </button>
                         </div>
                     ) : (
@@ -188,7 +188,7 @@ export default function Navbar() {
                                             handleLogout();
                                         }}
                                     >
-                                        Sign out
+                                        {t('nav.sign_out')}
                                     </button>
                                 </>
                             ) : (

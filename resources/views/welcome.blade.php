@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Sentra</title>
+        <title>SENTRA</title>
         <link rel="icon" href="{!! asset('images/fireicon.svg') !!}"/>
 
         <!-- Fonts -->

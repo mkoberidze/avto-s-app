@@ -208,18 +208,22 @@ const messages = {
     },
 };
 
+const toUpper = (value) => (typeof value === 'string' ? value.toUpperCase() : value);
+
 export function useI18n() {
     const { lang } = useLanguage();
     return useMemo(() => {
         return function t(key) {
-            return messages[lang]?.[key] ?? messages.en[key] ?? key;
+            const message = messages[lang]?.[key] ?? messages.en[key] ?? key;
+            return toUpper(message);
         };
     }, [lang]);
 }
 
 export function translateStatus(status, langCode) {
     const key = `status.${status}`;
-    return messages[langCode]?.[key] ?? messages.en[key] ?? status;
+    const message = messages[langCode]?.[key] ?? messages.en[key] ?? status;
+    return toUpper(message);
 }
 
 
