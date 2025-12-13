@@ -74,7 +74,12 @@ export default function AdminSettings() {
             });
             alert(t('settings.saved'));
         } catch (error) {
-            alert(t('settings.failed'));
+            console.error('Settings save error:', error);
+            const errorMessage = error.response?.data?.message || 
+                                (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
+                                error.message ||
+                                t('settings.failed');
+            alert(errorMessage);
         } finally {
             setSaving(false);
         }

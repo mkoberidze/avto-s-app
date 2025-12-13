@@ -67,7 +67,7 @@ export default function FormsPage() {
                 {!creating ? (
                     <div className="rounded-lg border border-black/10 bg-white p-6 flex items-center justify-between">
                         <div>
-                            <p className="text-[#6b7280]">{lang === 'ka' ? 'დააყენეთ ახალი განაცხადი' : 'Create a new request'}</p>
+                            <p className="text-[#6b7280]">{lang === 'ka' ? 'შეავსე ახალი განაცხადი' : 'Create a new request'}</p>
                         </div>
                         <button className="inline-flex items-center text-sm px-4 py-2 rounded-md bg-[#111827] text-white hover:bg-[#0f172a]" onClick={()=>{ setCreating(true); setStep(1); }}>
                             {lang === 'ka' ? 'დაწყება' : 'Start'}
@@ -135,6 +135,13 @@ export default function FormsPage() {
                                             const res = await axios.post('/api/forms', form, { headers: { 'Content-Type': 'multipart/form-data' } });
                                             setForms([res.data, ...forms]);
                                             setStep(3);
+                                        } catch (error) {
+                                            console.error('Form submission error:', error);
+                                            const errorMessage = error.response?.data?.message || 
+                                                                (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
+                                                                error.message ||
+                                                                (lang === 'ka' ? 'შეცდომა განაცხადის გაგზავნისას' : 'Error submitting form');
+                                            alert(errorMessage);
                                         } finally {
                                             setSubmitting(false);
                                         }

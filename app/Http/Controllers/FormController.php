@@ -26,7 +26,7 @@ class FormController extends Controller
             'input_one' => ['required','string','max:255'],
             'input_two' => ['required','string','max:2000'],
             'input_three' => ['required','string','max:255'],
-            'attachment' => ['required','file','mimetypes:application/pdf,application/octet-stream,image/jpeg,image/png,image/webp,application/acad,application/x-dwg','max:20480'],
+            'attachment' => ['sometimes','file','mimetypes:application/pdf,application/octet-stream,image/jpeg,image/png,image/webp,application/acad,application/x-dwg','max:20480'],
         ]);
 
         $slugBase = Str::slug($data['title']);
@@ -46,9 +46,11 @@ class FormController extends Controller
             'input_three' => $data['input_three'],
         ];
 
-        // attachment is required, validated above
-        $path = $request->file('attachment')->store('attachments', 'public');
-        $formData['attachment_url'] = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        // attachment is optional
+        if ($request->hasFile('attachment')) {
+            $path = $request->file('attachment')->store('attachments', 'public');
+            $formData['attachment_url'] = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        }
 
         $form = Form::create($formData);
 

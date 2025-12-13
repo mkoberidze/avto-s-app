@@ -69,18 +69,27 @@ export default function FormDetailsPage() {
                             </div>
                             <div className="col-span-full flex gap-2">
                                 <button className="inline-flex items-center text-sm px-4 py-2 rounded-md bg-[#111827] text-white hover:bg-[#0f172a]" onClick={async()=>{
-                                    const formData = new FormData();
-                                    formData.append('title', data.title);
-                                    formData.append('status', data.status);
-                                    formData.append('input_one', data.input_one);
-                                    formData.append('input_two', data.input_two);
-                                    formData.append('input_three', data.input_three);
-                                    if (data.attachment) {
-                                        formData.append('attachment', data.attachment);
+                                    try {
+                                        const formData = new FormData();
+                                        formData.append('title', data.title);
+                                        formData.append('status', data.status);
+                                        formData.append('input_one', data.input_one);
+                                        formData.append('input_two', data.input_two);
+                                        formData.append('input_three', data.input_three);
+                                        if (data.attachment) {
+                                            formData.append('attachment', data.attachment);
+                                        }
+                                        const res = await axios.put(`/api/forms/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                        setForm(res.data);
+                                        setEditing(false);
+                                    } catch (error) {
+                                        console.error('Form update error:', error);
+                                        const errorMessage = error.response?.data?.message || 
+                                                            (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
+                                                            error.message ||
+                                                            t('details.update_failed') || 'Error updating form';
+                                        alert(errorMessage);
                                     }
-                                    const res = await axios.put(`/api/forms/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                                    setForm(res.data);
-                                    setEditing(false);
                                 }}>{t('details.save')}</button>
                                 <button className="text-sm px-4 py-2 rounded-md border border-black/10" onClick={()=>setEditing(false)}>{t('details.cancel')}</button>
                             </div>
