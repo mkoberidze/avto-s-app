@@ -3,12 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Models\Form;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class FormController extends Controller
 {
+    private function normalizePhone(string $raw): string
+    {
+        $raw = trim($raw);
+        if (str_starts_with($raw, '+')) {
+            return '+'.preg_replace('/\D+/', '', substr($raw, 1));
+        }
+        return preg_replace('/\D+/', '', $raw);
+    }
+
+    private function sendSms(string $phone, string $message): void
+    {
+        try {
+            $apiKey = config('services.ubill.api_key');
+            $brandId = config('services.ubill.brand_id');
+            
+            if (!$apiKey || !$brandId) {
+                \Log::warning('SMS not sent: UBILL_API_KEY or UBILL_BRAND_ID not configured');
+                return;
+            }
+
+            $normalizedPhone = $this->normalizePhone($phone);
+            $phoneForApi = str_replace('+', '', $normalizedPhone);
+            $encodedMessage = urlencode($message);
+
+            $url = "https://api.ubill.dev/v1/sms/send?key={$apiKey}&brandID={$brandId}&numbers={$phoneForApi}&text={$encodedMessage}&stopList=false";
+            
+            $response = @file_get_contents($url);
+            
+            if ($response === false) {
+                \Log::error('Failed to send SMS notification', [
+                    'phone' => $phoneForApi,
+                    'url' => $url
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Exception while sending SMS', [
+                'phone' => $phone,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -53,6 +96,32 @@ class FormController extends Controller
         }
 
         $form = Form::create($formData);
+
+        // Notify admin users about the new form
+        try {
+            $adminUsers = User::role('admin')->get();
+            $userPhone = $user->phone ?? 'Unknown';
+            $directionLabels = [
+                'fire' => 'სახანძრო უსაფრთხოება',
+                'cctv' => 'კამერები',
+                'access' => 'დაშვების სისტემა'
+            ];
+            $directionLabel = $directionLabels[$data['input_one']] ?? $data['input_one'];
+            
+            $message = "ახალი განაცხადი: {$directionLabel}. მომხმარებელი: {$userPhone}. ID: {$form->id}";
+            
+            foreach ($adminUsers as $admin) {
+                if ($admin->phone) {
+                    $this->sendSms($admin->phone, $message);
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the form creation
+            \Log::error('Failed to send admin notification SMS', [
+                'form_id' => $form->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return response()->json($form, 201);
     }

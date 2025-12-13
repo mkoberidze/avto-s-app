@@ -3,13 +3,17 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 
 export default function ProtectedRoute({ children }) {
-    const { isAuthenticated, openPhoneModal } = useAuth();
+    const { isAuthenticated, loading, openPhoneModal } = useAuth();
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!loading && !isAuthenticated) {
             openPhoneModal();
         }
-    }, [isAuthenticated]);
+    }, [loading, isAuthenticated, openPhoneModal]);
+
+    if (loading) {
+        return null; // or a loading spinner
+    }
 
     if (!isAuthenticated) {
         return <Navigate to="/" replace />;

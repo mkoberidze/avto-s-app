@@ -4,7 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import axios from 'axios';
 
 export default function FormsPage() {
-    const { isAuthenticated, openPhoneModal } = useAuth();
+    const { isAuthenticated, loading, openPhoneModal } = useAuth();
     const { lang } = useLanguage();
     const [forms, setForms] = useState([]);
     const [creating, setCreating] = useState(false);
@@ -30,18 +30,28 @@ export default function FormsPage() {
         }
     }, [window.location.search]);
 
-    // Open login modal after render if user is not authenticated
+    // Open login modal after render if user is not authenticated (but wait for auth check to complete)
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!loading && !isAuthenticated) {
             openPhoneModal();
         }
-    }, [isAuthenticated]);
+    }, [loading, isAuthenticated, openPhoneModal]);
 
     useEffect(() => {
         if (isAuthenticated) {
             axios.get('/api/forms').then((res) => setForms(res.data || [])).catch(() => {});
         }
     }, [isAuthenticated]);
+
+    if (loading) {
+        return (
+            <main className="pt-24 sm:pt-28">
+                <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <p className="text-[#6b7280]">{lang === 'ka' ? 'იტვირთება...' : 'Loading...'}</p>
+                </section>
+            </main>
+        );
+    }
 
     if (!isAuthenticated) {
         return (

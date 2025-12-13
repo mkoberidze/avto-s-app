@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
     const [phoneModalOpen, setPhoneModalOpen] = useState(false);
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     function openPhoneModal() {
         setPhoneModalOpen(true);
@@ -47,18 +48,29 @@ export function AuthProvider({ children }) {
 
     // Restore session from localStorage on mount
     useEffect(() => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            if (token) {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                axios.get('/api/user')
-                    .then(res => {
+        const checkAuth = async () => {
+            try {
+                const token = localStorage.getItem('auth_token');
+                if (token) {
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    try {
+                        const res = await axios.get('/api/user');
                         const userData = res.data.user || res.data;
                         setUser(enhanceUser(userData));
-                    })
-                    .catch(() => setUser(null));
+                    } catch {
+                        setUser(null);
+                    }
+                } else {
+                    setUser(null);
+                }
+            } catch {
+                setUser(null);
+            } finally {
+                setLoading(false);
             }
-        } catch {}
+        };
+        
+        checkAuth();
     }, []);
 
     function enhanceUser(user) {
@@ -74,6 +86,7 @@ export function AuthProvider({ children }) {
         () => ({
             isAuthenticated: Boolean(user),
             user,
+            loading,
             phoneModalOpen,
             openPhoneModal,
             closePhoneModal,
@@ -81,7 +94,7 @@ export function AuthProvider({ children }) {
             verifyOtp,
             signOut,
         }),
-        [user, phoneModalOpen]
+        [user, loading, phoneModalOpen]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
