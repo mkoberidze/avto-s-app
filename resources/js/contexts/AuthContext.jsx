@@ -38,6 +38,13 @@ export function AuthProvider({ children }) {
         return userPayload;
     }
 
+    async function updateProfile(name) {
+        const res = await axios.patch('/api/user', { name });
+        const userPayload = res.data.user || res.data;
+        setUser(enhanceUser(userPayload));
+        return userPayload;
+    }
+
     function signOut() {
         setUser(null);
         try {
@@ -92,6 +99,7 @@ export function AuthProvider({ children }) {
             closePhoneModal,
             requestOtp,
             verifyOtp,
+            updateProfile,
             signOut,
         }),
         [user, loading, phoneModalOpen]

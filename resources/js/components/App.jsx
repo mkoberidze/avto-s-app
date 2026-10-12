@@ -11,7 +11,9 @@ import HomePage from './storefront/pages/HomePage.jsx';
 import CatalogPage from './storefront/pages/CatalogPage.jsx';
 import ProductPage from './storefront/pages/ProductPage.jsx';
 import CartPage from './storefront/pages/CartPage.jsx';
-import CheckoutPlaceholder from './storefront/pages/CheckoutPlaceholder.jsx';
+import CheckoutPage from './storefront/pages/CheckoutPage.jsx';
+import LoginPage from './storefront/pages/LoginPage.jsx';
+import AccountPage from './storefront/pages/AccountPage.jsx';
 import AboutStorePage from './storefront/pages/AboutStorePage.jsx';
 import ContactPage from './storefront/pages/ContactPage.jsx';
 import NotFoundPage from './storefront/pages/NotFoundPage.jsx';
@@ -40,7 +42,9 @@ function AppShell() {
                     <Route path="/products/category/:id" element={<CatalogPage />} />
                     <Route path="/products/:id" element={<ProductPage />} />
                     <Route path="/cart" element={<CartPage />} />
-                    <Route path="/checkout" element={<CheckoutPlaceholder />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/account" element={<AccountPage />} />
                     <Route path="/about" element={<AboutStorePage />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="*" element={<NotFoundPage />} />

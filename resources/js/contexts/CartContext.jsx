@@ -80,6 +80,10 @@ export function CartProvider({ children }) {
         setItems((prev) => prev.filter((item) => item.id !== String(id)));
     }
 
+    function clear() {
+        setItems([]);
+    }
+
     const count = items.reduce((sum, item) => sum + item.quantity, 0);
     const total = items.reduce((sum, item) => sum + item.snapshot.price * item.quantity, 0);
 
@@ -94,6 +98,7 @@ export function CartProvider({ children }) {
             addItem,
             setQuantity,
             removeItem,
+            clear,
         }),
         [items, count, total, drawerOpen]
     );

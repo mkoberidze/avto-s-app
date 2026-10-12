@@ -10,6 +10,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminCategoryController;
+use App\Http\Controllers\OrderController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/otp/request', [AuthController::class, 'requestOtp']);
@@ -27,6 +28,10 @@ Route::middleware('auth:sanctum')->prefix('forms')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', [AuthController::class, 'getUser']);
+    Route::patch('user', [AuthController::class, 'updateUser']);
+    Route::get('orders', [OrderController::class, 'index']);
+    Route::post('orders', [OrderController::class, 'store']);
+    Route::get('orders/{id}', [OrderController::class, 'show'])->whereNumber('id');
 });
 
 // Public pages

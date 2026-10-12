@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Form;
 use App\Models\User;
+use App\Support\UbillSms;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class FormController extends Controller
@@ -21,35 +21,7 @@ class FormController extends Controller
 
     private function sendSms(string $phone, string $message): void
     {
-        try {
-            $apiKey = config('services.ubill.api_key');
-            $brandId = config('services.ubill.brand_id');
-            
-            if (!$apiKey || !$brandId) {
-                \Log::warning('SMS not sent: UBILL_API_KEY or UBILL_BRAND_ID not configured');
-                return;
-            }
-
-            $normalizedPhone = $this->normalizePhone($phone);
-            $phoneForApi = str_replace('+', '', $normalizedPhone);
-            $encodedMessage = urlencode($message);
-
-            $url = "https://api.ubill.dev/v1/sms/send?key={$apiKey}&brandID={$brandId}&numbers={$phoneForApi}&text={$encodedMessage}&stopList=false";
-            
-            $response = @file_get_contents($url);
-            
-            if ($response === false) {
-                \Log::error('Failed to send SMS notification', [
-                    'phone' => $phoneForApi,
-                    'url' => $url
-                ]);
-            }
-        } catch (\Exception $e) {
-            \Log::error('Exception while sending SMS', [
-                'phone' => $phone,
-                'message' => $e->getMessage()
-            ]);
-        }
+        app(UbillSms::class)->sendIfConfigured($phone, $message);
     }
 
     public function index(Request $request)

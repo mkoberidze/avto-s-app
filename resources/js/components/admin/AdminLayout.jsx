@@ -1,25 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { loginRedirect } from '../../lib/safePath.js';
 import { ExternalLink, Menu, ShieldCheck, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useI18n } from '../../contexts/i18n.js';
 import { LanguageSwitcher } from '../storefront/Header.jsx';
-import { Button } from '../storefront/ui.jsx';
 import { ADMIN_SECTIONS, findAdminSection } from './sections.js';
 
 export default function AdminLayout() {
     const t = useI18n();
-    const { isAuthenticated, user, loading, openPhoneModal } = useAuth();
+    const { isAuthenticated, user, loading } = useAuth();
     const location = useLocation();
     const [sidebar, setSidebar] = useState(false);
     const sectionId = location.pathname.split('/')[2] || 'products';
     const active = findAdminSection(sectionId);
-
-    useEffect(() => {
-        if (!loading && !isAuthenticated) {
-            openPhoneModal();
-        }
-    }, [loading, isAuthenticated, openPhoneModal]);
 
     if (loading) {
         return (
@@ -30,18 +24,7 @@ export default function AdminLayout() {
     }
 
     if (!isAuthenticated) {
-        return (
-            <div className="storefront-root grid min-h-screen place-items-center bg-surface p-4">
-                <div className="w-full max-w-md rounded-2xl border border-line bg-white p-7 text-center shadow-card sm:p-10">
-                    <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-navy text-white"><ShieldCheck size={26} /></span>
-                    <p className="section-kicker mt-6">{t('admin.panel')}</p>
-                    <h1 className="text-2xl font-black text-navy">{t('admin.secure_title')}</h1>
-                    <p className="mt-3 text-sm leading-6 text-muted">{t('admin.secure_text')}</p>
-                    <Button className="mt-7 w-full" onClick={openPhoneModal}>{t('admin.sign_in')}</Button>
-                    <Link to="/" className="mt-4 block text-sm font-semibold text-muted hover:text-navy">{t('admin.view_store')}</Link>
-                </div>
-            </div>
-        );
+        return <Navigate to={loginRedirect(`${location.pathname}${location.search}`)} replace />;
     }
 
     if (!user?.hasRole?.('admin')) {

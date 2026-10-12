@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, Menu, Search, ShieldCheck, ShoppingCart, User, X } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useCart } from '../../contexts/CartContext.jsx';
 import { categoryRoots, childrenOf, useStorefrontData } from './StorefrontData.jsx';
+import { loginRedirect } from '../../lib/safePath.js';
 
 export function LanguageSwitcher({ dark = false }) {
     const { lang, setLang } = useLanguage();
@@ -29,12 +30,12 @@ export function LanguageSwitcher({ dark = false }) {
 export default function Header() {
     const t = useI18n();
     const { settings, categories } = useStorefrontData();
-    const { isAuthenticated, user, openPhoneModal, signOut } = useAuth();
+    const { isAuthenticated } = useAuth();
     const { count, openDrawer } = useCart();
     const navigate = useNavigate();
+    const location = useLocation();
     const [q, setQ] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
-    const [accountOpen, setAccountOpen] = useState(false);
     const roots = useMemo(() => categoryRoots(categories), [categories]);
 
     function search(event) {
@@ -76,30 +77,13 @@ export default function Header() {
                 </form>
                 <div className="ml-auto flex items-center gap-1 sm:gap-2">
                     <div className="hidden lg:block"><LanguageSwitcher /></div>
-                    <div className="relative">
-                        <button
-                            type="button"
-                            aria-label={isAuthenticated ? t('nav.account') : t('nav.sign_in')}
-                            className="grid size-10 place-items-center rounded-lg text-navy hover:bg-surface"
-                            onClick={() => {
-                                if (!isAuthenticated) {
-                                    openPhoneModal();
-                                    return;
-                                }
-                                setAccountOpen((v) => !v);
-                            }}
-                        >
-                            <User size={20} />
-                        </button>
-                        {isAuthenticated && accountOpen ? (
-                            <div className="absolute right-0 z-50 mt-1 w-52 rounded-xl border border-line bg-white p-3 shadow-card">
-                                <p className="truncate text-sm font-semibold text-navy">{user?.name || user?.phone}</p>
-                                <button type="button" className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-surface" onClick={() => { setAccountOpen(false); signOut(); }}>
-                                    {t('nav.sign_out')}
-                                </button>
-                            </div>
-                        ) : null}
-                    </div>
+                    <Link
+                        to={isAuthenticated ? '/account' : loginRedirect(`${location.pathname}${location.search}`)}
+                        aria-label={isAuthenticated ? t('nav.account') : t('nav.sign_in')}
+                        className="grid size-10 place-items-center rounded-lg text-navy hover:bg-surface"
+                    >
+                        <User size={20} />
+                    </Link>
                     <button type="button" onClick={openDrawer} aria-label={t('nav.cart')} className="relative grid size-10 place-items-center rounded-lg text-navy hover:bg-surface">
                         <ShoppingCart size={20} />
                         {count > 0 ? <span className="absolute -right-0.5 -top-0.5 grid size-5 place-items-center rounded-full bg-accent text-[10px] font-bold text-white">{count}</span> : null}
