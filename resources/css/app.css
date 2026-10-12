@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -11,6 +11,19 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-sans-ka: 'Noto Sans Georgian', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-storefront: 'Noto Sans Georgian', 'Noto Sans', sans-serif;
+
+    --color-navy: #0b2942;
+    --color-navy-light: #143b5a;
+    --color-accent: #e14936;
+    --color-accent-dark: #c83827;
+    --color-ink: #162635;
+    --color-muted: #657483;
+    --color-surface: #f4f7f9;
+    --color-line: #dfe6eb;
+
+    --shadow-card: 0 12px 34px rgba(11, 41, 66, 0.1);
+    --spacing-18: 4.5rem;
 }
 
 .lang-ka {
@@ -21,8 +34,62 @@
     text-transform: uppercase;
 }
 
+.storefront-root {
+    color: var(--color-ink);
+    font-family: var(--font-storefront);
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+}
+
+.storefront-root button,
+.storefront-root input,
+.storefront-root select,
+.storefront-root textarea {
+    font: inherit;
+}
+
+.container-shell {
+    @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8;
+}
+
+.section-space {
+    @apply py-14 sm:py-20;
+}
+
+.section-kicker {
+    @apply mb-2 text-xs font-bold uppercase tracking-[0.14em] text-accent;
+}
+
+.section-title {
+    @apply text-2xl font-black leading-tight text-navy sm:text-3xl;
+}
+
+.filter-title {
+    @apply mb-3 text-sm font-bold text-navy;
+}
+
+.filter-link {
+    @apply block rounded-md px-2 py-1.5 text-sm text-muted hover:bg-surface hover:text-navy;
+}
+
+.filter-link-active {
+    @apply block rounded-md bg-surface px-2 py-1.5 text-sm font-bold text-accent;
+}
+
+.filter-input {
+    @apply h-10 min-w-0 w-full rounded-lg border border-line px-2 text-sm outline-none focus:border-accent;
+}
+
+.form-label {
+    @apply block text-sm font-bold text-navy;
+}
+
+.form-input {
+    @apply mt-2 min-h-12 w-full rounded-lg border border-line bg-white px-4 py-3 text-sm font-normal text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/10;
+}
+
 .product-html p { margin-bottom: 0.75rem; }
 .product-html ul, .product-html ol { margin: 0.75rem 0 0.75rem 1.25rem; list-style: disc; }
 .product-html table { width: 100%; border-collapse: collapse; }
-.product-html td, .product-html th { border: 1px solid #e5e7eb; padding: 0.35rem 0.5rem; }
+.product-html td, .product-html th { border: 1px solid var(--color-line); padding: 0.35rem 0.5rem; }
 .product-html a { text-decoration: underline; }

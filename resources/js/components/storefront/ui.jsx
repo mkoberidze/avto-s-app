@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Minus, Plus, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
 import { useCart } from '../../contexts/CartContext.jsx';
 
@@ -10,8 +10,12 @@ export function formatPrice(value) {
     return `${n.toFixed(2)} ₾`;
 }
 
-export function Price({ value, className = '' }) {
-    return <span className={`font-semibold tabular-nums ${className}`}>{formatPrice(value)}</span>;
+export function Price({ value, size = 'normal', className = '' }) {
+    return (
+        <span className={`font-bold tracking-tight text-navy ${size === 'large' ? 'text-3xl' : 'text-lg'} ${className}`}>
+            {formatPrice(value)}
+        </span>
+    );
 }
 
 export function stockKind(product) {
@@ -22,30 +26,28 @@ export function stockKind(product) {
 
 export function StockBadge({ product }) {
     const t = useI18n();
-    const kind = stockKind(product);
-    const styles = {
-        out: 'bg-red-50 text-red-700 border-red-100',
-        low: 'bg-amber-50 text-amber-800 border-amber-100',
-        in: 'bg-emerald-50 text-emerald-800 border-emerald-100',
-    };
-    const labels = { out: t('stock.out'), low: t('stock.low'), in: t('stock.in') };
+    const low = product.in_stock && product.stock_level === '*';
     return (
-        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${styles[kind]}`}>
-            {labels[kind]}
+        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${!product.in_stock ? 'bg-red-50 text-red-700' : low ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+            {!product.in_stock ? t('stock.out') : low ? t('stock.low') : t('stock.in')}
         </span>
     );
 }
 
 export function Button({ children, variant = 'primary', className = '', type = 'button', ...props }) {
-    const base = 'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227] disabled:opacity-50 disabled:pointer-events-none';
     const variants = {
-        primary: 'bg-[#0F2744] text-white hover:bg-[#18355c]',
-        accent: 'bg-[#C9A227] text-[#0F2744] hover:bg-[#d4ae3a]',
-        ghost: 'border border-[#0F2744]/15 bg-white text-[#0F2744] hover:bg-[#F4F1EA]',
+        primary: 'bg-accent text-white hover:bg-accent-dark',
+        secondary: 'bg-navy text-white hover:bg-navy-light',
+        accent: 'bg-accent text-white hover:bg-accent-dark',
+        ghost: 'border border-line bg-white text-navy hover:bg-surface',
         danger: 'text-red-700 hover:bg-red-50',
     };
     return (
-        <button type={type} className={`${base} ${variants[variant] || variants.primary} ${className}`} {...props}>
+        <button
+            type={type}
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant] || variants.primary} ${className}`}
+            {...props}
+        >
             {children}
         </button>
     );
@@ -54,31 +56,31 @@ export function Button({ children, variant = 'primary', className = '', type = '
 export function QuantityStepper({ value, onChange, disabled = false }) {
     const t = useI18n();
     return (
-        <div className="inline-flex items-center rounded-lg border border-[#0F2744]/15 bg-white">
+        <div className="inline-flex h-11 items-center rounded-lg border border-line bg-white">
             <button
                 type="button"
-                className="grid h-10 w-10 place-items-center text-[#0F2744] hover:bg-[#F4F1EA] disabled:opacity-40"
-                aria-label="Decrease quantity"
+                aria-label={t('home.prev')}
+                className="grid h-full w-10 place-items-center text-muted hover:text-navy disabled:opacity-40"
                 disabled={disabled || value <= 1}
                 onClick={() => onChange(value - 1)}
             >
-                <Minus className="h-4 w-4" />
+                <Minus size={16} />
             </button>
             <input
                 aria-label={t('product.qty')}
-                className="h-10 w-12 border-x border-[#0F2744]/10 text-center text-sm tabular-nums outline-none"
+                className="min-w-8 bg-transparent text-center text-sm font-semibold outline-none"
                 value={value}
                 disabled={disabled}
                 onChange={(e) => onChange(e.target.value)}
             />
             <button
                 type="button"
-                className="grid h-10 w-10 place-items-center text-[#0F2744] hover:bg-[#F4F1EA] disabled:opacity-40"
-                aria-label="Increase quantity"
+                aria-label={t('home.next')}
+                className="grid h-full w-10 place-items-center text-muted hover:text-navy disabled:opacity-40"
                 disabled={disabled || value >= 99}
                 onClick={() => onChange(value + 1)}
             >
-                <Plus className="h-4 w-4" />
+                <Plus size={16} />
             </button>
         </div>
     );
@@ -88,8 +90,8 @@ export function ProductImage({ src, alt, className = '' }) {
     const [failed, setFailed] = useState(false);
     if (!src || failed) {
         return (
-            <div className={`grid place-items-center bg-[#EEF2F6] text-[#8A97A6] ${className}`} aria-hidden="true">
-                <ShoppingCart className="h-8 w-8" />
+            <div className={`grid place-items-center bg-surface text-slate-300 ${className}`} aria-hidden="true">
+                <ShoppingCart size={36} />
             </div>
         );
     }
@@ -98,7 +100,7 @@ export function ProductImage({ src, alt, className = '' }) {
             src={src}
             alt={alt || ''}
             loading="lazy"
-            className={`object-contain ${className}`}
+            className={className}
             onError={() => setFailed(true)}
         />
     );
@@ -110,28 +112,29 @@ export function ProductCard({ product }) {
     const inStock = Boolean(product.in_stock);
 
     return (
-        <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#0F2744]/8 bg-white shadow-sm transition hover:shadow-md">
-            <Link to={`/products/${product.id}`} className="relative block aspect-square bg-[#F7F8FA] p-3">
-                <ProductImage src={product.images?.[0]} alt={product.name} className="h-full w-full" />
-                <div className="absolute left-3 top-3">
+        <article className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white transition hover:-translate-y-1 hover:shadow-card">
+            <Link to={`/products/${product.id}`} className="block aspect-square overflow-hidden bg-surface">
+                <ProductImage src={product.images?.[0]} alt={product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            </Link>
+            <div className="flex flex-1 flex-col p-4">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="truncate text-xs font-semibold uppercase tracking-wider text-muted">{product.brand}</span>
                     <StockBadge product={product} />
                 </div>
-            </Link>
-            <div className="flex flex-1 flex-col gap-2 p-4">
-                {product.brand ? <p className="text-xs uppercase tracking-wide text-[#7A8794]">{product.brand}</p> : null}
-                <Link to={`/products/${product.id}`} className="line-clamp-2 min-h-[2.75rem] text-sm font-medium text-[#0F2744] hover:underline">
+                <Link to={`/products/${product.id}`} className="line-clamp-2 min-h-12 text-sm font-semibold leading-6 text-navy hover:text-accent">
                     {product.name}
                 </Link>
-                <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-                    <Price value={product.price} className="text-[#0F2744]" />
-                    <Button
-                        variant="accent"
-                        className="h-auto min-h-9 max-w-[9.5rem] px-2 py-1.5 text-xs leading-tight sm:text-sm"
+                <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+                    <Price value={product.price} />
+                    <button
+                        type="button"
+                        aria-label={t('product.add_to_cart')}
                         disabled={!inStock}
                         onClick={() => addItem(product, 1)}
+                        className="grid size-11 shrink-0 place-items-center rounded-lg bg-navy text-white transition hover:bg-accent disabled:bg-slate-200 disabled:text-slate-400"
                     >
-                        {inStock ? t('product.add_to_cart') : t('product.out_of_stock')}
-                    </Button>
+                        <ShoppingCart size={18} />
+                    </button>
                 </div>
             </div>
         </article>
@@ -140,54 +143,55 @@ export function ProductCard({ product }) {
 
 export function ProductSkeleton() {
     return (
-        <div className="animate-pulse overflow-hidden rounded-2xl border border-[#0F2744]/8 bg-white">
-            <div className="aspect-square bg-[#EEF2F6]" />
-            <div className="space-y-2 p-4">
-                <div className="h-3 w-16 rounded bg-[#EEF2F6]" />
-                <div className="h-4 w-full rounded bg-[#EEF2F6]" />
-                <div className="h-4 w-2/3 rounded bg-[#EEF2F6]" />
-                <div className="h-8 w-24 rounded bg-[#EEF2F6]" />
+        <div className="animate-pulse overflow-hidden rounded-xl border border-line bg-white">
+            <div className="aspect-square bg-slate-100" />
+            <div className="space-y-3 p-4">
+                <div className="h-3 w-1/3 rounded bg-slate-100" />
+                <div className="h-5 rounded bg-slate-100" />
+                <div className="h-5 w-2/3 rounded bg-slate-100" />
+                <div className="h-10 rounded bg-slate-100" />
             </div>
         </div>
     );
 }
 
-export function EmptyState({ title, body, action }) {
+export function EmptyState({ title, body, action, cart = false }) {
+    const t = useI18n();
     return (
-        <div className="rounded-2xl border border-dashed border-[#0F2744]/20 bg-white px-6 py-16 text-center">
-            <h2 className="text-lg font-semibold text-[#0F2744]">{title}</h2>
-            {body ? <p className="mx-auto mt-2 max-w-md text-sm text-[#5C6B7A]">{body}</p> : null}
+        <div className="rounded-xl border border-dashed border-line bg-surface px-6 py-14 text-center">
+            <ShoppingCart className="mx-auto mb-4 text-slate-300" size={36} />
+            <h3 className="text-lg font-bold text-navy">{title || t(cart ? 'cart.empty' : 'catalog.empty')}</h3>
+            {(body || cart) ? <p className="mt-2 text-sm text-muted">{body || t('cart.continue')}</p> : null}
             {action ? <div className="mt-6">{action}</div> : null}
         </div>
     );
 }
 
-export function CartLines({ compact = false }) {
+export function CartLines() {
     const t = useI18n();
     const { items, setQuantity, removeItem } = useCart();
 
     return (
-        <ul className="divide-y divide-[#0F2744]/8">
+        <div className="divide-y divide-line">
             {items.map((item) => (
-                <li key={item.id} className="flex gap-3 py-4">
-                    <Link to={`/products/${item.id}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-[#F7F8FA]">
-                        <ProductImage src={item.snapshot.image} alt={item.snapshot.name} className="h-full w-full" />
+                <div key={item.id} className="flex gap-4 py-5">
+                    <Link to={`/products/${item.id}`} className="size-20 shrink-0 overflow-hidden rounded-lg bg-surface">
+                        <ProductImage src={item.snapshot.image} alt={item.snapshot.name} className="h-full w-full object-cover" />
                     </Link>
                     <div className="min-w-0 flex-1">
-                        <Link to={`/products/${item.id}`} className="line-clamp-2 text-sm font-medium text-[#0F2744] hover:underline">
+                        <Link to={`/products/${item.id}`} className="line-clamp-2 text-sm font-semibold text-navy">
                             {item.snapshot.name}
                         </Link>
-                        <p className="mt-0.5 text-xs text-[#7A8794]">{item.snapshot.product_code}</p>
-                        <div className={`mt-2 flex flex-wrap items-center gap-3 ${compact ? '' : ''}`}>
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                             <QuantityStepper value={item.quantity} onChange={(qty) => setQuantity(item.id, qty)} />
-                            <Price value={item.snapshot.price * item.quantity} className="text-sm" />
-                            <button type="button" className="text-xs text-red-700 hover:underline" onClick={() => removeItem(item.id)}>
-                                {t('cart.remove')}
-                            </button>
+                            <Price value={item.snapshot.price * item.quantity} />
                         </div>
                     </div>
-                </li>
+                    <button type="button" aria-label={t('cart.remove')} onClick={() => removeItem(item.id)} className="self-start p-2 text-muted hover:text-red-600">
+                        <Trash2 size={17} />
+                    </button>
+                </div>
             ))}
-        </ul>
+        </div>
     );
 }

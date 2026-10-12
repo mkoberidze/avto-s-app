@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import { useI18n } from '../../../contexts/i18n.js';
 import { useCart } from '../../../contexts/CartContext.jsx';
 import { Button, CartLines, EmptyState, Price } from '../ui.jsx';
@@ -9,25 +10,45 @@ export default function CartPage() {
     const { items, total } = useCart();
 
     return (
-        <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-            <h1 className="mb-6 text-2xl font-semibold">{t('cart.title')}</h1>
-            {items.length === 0 ? (
-                <EmptyState
-                    title={t('cart.empty')}
-                    action={<Link to="/products" className="text-sm font-medium underline">{t('cart.continue')}</Link>}
-                />
-            ) : (
-                <div className="rounded-2xl bg-white p-4 sm:p-6">
-                    <CartLines />
-                    <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[#0F2744]/10 pt-4">
-                        <div>
-                            <div className="text-sm text-[#5C6B7A]">{t('cart.total')}</div>
-                            <Price value={total} className="text-2xl" />
-                            <p className="mt-1 max-w-sm text-xs text-[#7A8794]">{t('cart.display_note')}</p>
-                        </div>
-                        <Link to="/checkout"><Button>{t('cart.proceed')}</Button></Link>
+        <div className="container-shell py-10">
+            <div className="mb-8 flex items-center gap-2 text-sm text-muted">
+                <Link to="/">{t('nav.home')}</Link>
+                <ChevronRight size={14} />
+                <span className="text-navy">{t('cart.title')}</span>
+            </div>
+            <h1 className="section-title mb-8">{t('cart.title')}</h1>
+            {items.length ? (
+                <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
+                    <div className="rounded-xl border border-line bg-white px-5">
+                        <CartLines />
                     </div>
+                    <aside className="h-fit rounded-xl bg-surface p-6">
+                        <h2 className="text-lg font-bold text-navy">{t('cart.total')}</h2>
+                        <div className="my-5 space-y-3 border-y border-line py-5">
+                            <div className="flex justify-between text-sm text-muted">
+                                <span>{t('cart.subtotal')}</span>
+                                <Price value={total} />
+                            </div>
+                            <div className="flex justify-between text-sm text-muted">
+                                <span>{t('home.delivery')}</span>
+                                <span>—</span>
+                            </div>
+                        </div>
+                        <div className="mb-6 flex items-center justify-between">
+                            <strong>{t('cart.total')}</strong>
+                            <Price value={total} size="large" />
+                        </div>
+                        <p className="mb-4 text-xs text-muted">{t('cart.display_note')}</p>
+                        <Link to="/checkout"><Button className="w-full">{t('cart.proceed')}</Button></Link>
+                    </aside>
                 </div>
+            ) : (
+                <>
+                    <EmptyState cart />
+                    <div className="mt-5 text-center">
+                        <Link to="/products"><Button variant="ghost">{t('cart.continue')}</Button></Link>
+                    </div>
+                </>
             )}
         </div>
     );

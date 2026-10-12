@@ -1,121 +1,86 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, Menu, Search, ShoppingCart, User, X } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { ChevronDown, Menu, Search, ShieldCheck, ShoppingCart, User, X } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useCart } from '../../contexts/CartContext.jsx';
 import { categoryRoots, childrenOf, useStorefrontData } from './StorefrontData.jsx';
-import CategoryIcon from './CategoryIcon.jsx';
+
+export function LanguageSwitcher({ dark = false }) {
+    const { lang, setLang } = useLanguage();
+    return (
+        <div className={`inline-flex rounded-lg border p-1 ${dark ? 'border-white/20' : 'border-line'}`}>
+            {['ka', 'en', 'ru'].map((code) => (
+                <button
+                    key={code}
+                    type="button"
+                    onClick={() => setLang(code)}
+                    aria-pressed={lang === code}
+                    className={`rounded-md px-2 py-1 text-xs font-bold uppercase transition ${lang === code ? (dark ? 'bg-white text-navy' : 'bg-navy text-white') : (dark ? 'text-white/60 hover:text-white' : 'text-muted hover:text-navy')}`}
+                >
+                    {code}
+                </button>
+            ))}
+        </div>
+    );
+}
 
 export default function Header() {
     const t = useI18n();
-    const { lang, setLang } = useLanguage();
     const { settings, categories } = useStorefrontData();
     const { isAuthenticated, user, openPhoneModal, signOut } = useAuth();
     const { count, openDrawer } = useCart();
     const navigate = useNavigate();
     const [q, setQ] = useState('');
-    const [mobileOpen, setMobileOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [accountOpen, setAccountOpen] = useState(false);
-    const [megaOpen, setMegaOpen] = useState(false);
-
     const roots = useMemo(() => categoryRoots(categories), [categories]);
 
-    useEffect(() => {
-        if (settings.logo_url) return;
-    }, [settings.logo_url]);
-
-    function submitSearch(e) {
-        e.preventDefault();
+    function search(event) {
+        event.preventDefault();
         const term = q.trim();
         navigate(term ? `/products?q=${encodeURIComponent(term)}` : '/products');
-        setMobileOpen(false);
+        setMenuOpen(false);
     }
 
     return (
-        <header className="sticky top-0 z-40 border-b border-[#0F2744]/10 bg-white/95 backdrop-blur">
-            <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-                <button type="button" className="grid h-10 w-10 place-items-center rounded-lg md:hidden" aria-label="Menu" onClick={() => setMobileOpen(true)}>
-                    <Menu className="h-5 w-5" />
-                </button>
-
-                <Link to="/" className="flex min-w-0 items-center gap-2">
+        <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
+            <div className="bg-navy text-white">
+                <div className="container-shell flex h-8 items-center justify-between text-xs">
+                    <span>{t('home.tagline')}</span>
+                    <span className="hidden text-white/65 sm:block">+995 32 2 11 22 33 · info@sentra.ge</span>
+                </div>
+            </div>
+            <div className="container-shell flex h-18 items-center gap-4">
+                <Link to="/" className="flex shrink-0 items-center gap-2.5">
                     {settings.logo_url ? (
-                        <img src={settings.logo_url} alt={t('nav.brand')} className="h-9 w-9 object-contain" />
+                        <img src={settings.logo_url} alt="" className="size-9 rounded-lg object-contain" />
                     ) : (
-                        <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#0F2744] text-sm font-bold text-white">S</span>
+                        <span className="grid size-9 place-items-center rounded-lg bg-accent text-white"><ShieldCheck size={21} /></span>
                     )}
-                    <span className="truncate text-lg font-semibold text-[#0F2744]">{t('nav.brand')}</span>
+                    <span className="text-xl font-black tracking-wider text-navy">{t('nav.brand')}</span>
                 </Link>
-
-                <nav className="ml-4 hidden items-center gap-1 md:flex">
-                    <div className="relative" onMouseEnter={() => setMegaOpen(true)} onMouseLeave={() => setMegaOpen(false)}>
-                        <button type="button" className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-[#0F2744] hover:bg-[#F4F1EA]">
-                            {t('nav.catalog')} <ChevronDown className="h-4 w-4" />
-                        </button>
-                        {megaOpen ? (
-                            <div className="absolute left-0 top-full z-50 w-[min(720px,70vw)] rounded-2xl border border-[#0F2744]/10 bg-white p-4 shadow-xl">
-                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                    {roots.map((root) => (
-                                        <div key={root.id}>
-                                            <Link to={`/products/category/${root.id}`} className="flex items-center gap-2 font-medium text-[#0F2744] hover:text-[#C9A227]" onClick={() => setMegaOpen(false)}>
-                                                <CategoryIcon id={root.id} className="h-4 w-4 shrink-0" />
-                                                <span className="min-w-0 break-words">{root.name}</span>
-                                            </Link>
-                                            <ul className="mt-2 space-y-1">
-                                                {childrenOf(categories, root.id).slice(0, 6).map((child) => (
-                                                    <li key={child.id}>
-                                                        <Link to={`/products/category/${child.id}`} className="block truncate text-sm text-[#5C6B7A] hover:text-[#0F2744]" onClick={() => setMegaOpen(false)}>
-                                                            {child.name}
-                                                        </Link>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : null}
-                    </div>
-                    <Link to="/about" className="rounded-lg px-3 py-2 text-sm text-[#0F2744] hover:bg-[#F4F1EA]">{t('nav.about')}</Link>
-                    <Link to="/contact" className="rounded-lg px-3 py-2 text-sm text-[#0F2744] hover:bg-[#F4F1EA]">{t('nav.contact')}</Link>
-                </nav>
-
-                <form onSubmit={submitSearch} className="ml-auto hidden min-w-0 flex-1 max-w-md md:block">
+                <form onSubmit={search} className="mx-auto hidden max-w-xl flex-1 md:flex">
                     <label className="sr-only" htmlFor="header-search">{t('nav.search')}</label>
-                    <div className="relative">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7A8794]" />
-                        <input
-                            id="header-search"
-                            value={q}
-                            onChange={(e) => setQ(e.target.value)}
-                            placeholder={t('nav.search_placeholder')}
-                            className="h-10 w-full rounded-lg border border-[#0F2744]/15 bg-[#F7F8FA] pl-9 pr-3 text-sm outline-none focus:border-[#C9A227]"
-                        />
-                    </div>
+                    <input
+                        id="header-search"
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        className="h-11 w-full rounded-l-lg border border-r-0 border-line bg-surface px-4 text-sm outline-none focus:border-accent"
+                        placeholder={t('nav.search_placeholder')}
+                    />
+                    <button type="submit" aria-label={t('nav.search')} className="grid w-12 place-items-center rounded-r-lg bg-navy text-white">
+                        <Search size={18} />
+                    </button>
                 </form>
-
-                <div className="ml-auto flex items-center gap-1 md:ml-3">
-                    <div className="flex rounded-lg border border-[#0F2744]/10 p-0.5 text-xs font-semibold">
-                        {['ka', 'en', 'ru'].map((code) => (
-                            <button
-                                key={code}
-                                type="button"
-                                className={`rounded-md px-2 py-1 ${lang === code ? 'bg-[#0F2744] text-white' : 'text-[#5C6B7A] hover:bg-[#F4F1EA]'}`}
-                                onClick={() => setLang(code)}
-                                aria-pressed={lang === code}
-                            >
-                                {code.toUpperCase()}
-                            </button>
-                        ))}
-                    </div>
-
+                <div className="ml-auto flex items-center gap-1 sm:gap-2">
+                    <div className="hidden lg:block"><LanguageSwitcher /></div>
                     <div className="relative">
                         <button
                             type="button"
-                            className="grid h-10 w-10 place-items-center rounded-lg hover:bg-[#F4F1EA]"
-                            aria-label={t('nav.account')}
+                            aria-label={isAuthenticated ? t('nav.account') : t('nav.sign_in')}
+                            className="grid size-10 place-items-center rounded-lg text-navy hover:bg-surface"
                             onClick={() => {
                                 if (!isAuthenticated) {
                                     openPhoneModal();
@@ -124,55 +89,64 @@ export default function Header() {
                                 setAccountOpen((v) => !v);
                             }}
                         >
-                            <User className="h-5 w-5" />
+                            <User size={20} />
                         </button>
                         {isAuthenticated && accountOpen ? (
-                            <div className="absolute right-0 mt-1 w-52 rounded-xl border border-[#0F2744]/10 bg-white p-3 shadow-lg">
-                                <p className="truncate text-sm font-medium text-[#0F2744]">{user?.name || user?.phone}</p>
-                                <button type="button" className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[#F4F1EA]" onClick={() => { setAccountOpen(false); signOut(); }}>
+                            <div className="absolute right-0 z-50 mt-1 w-52 rounded-xl border border-line bg-white p-3 shadow-card">
+                                <p className="truncate text-sm font-semibold text-navy">{user?.name || user?.phone}</p>
+                                <button type="button" className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-surface" onClick={() => { setAccountOpen(false); signOut(); }}>
                                     {t('nav.sign_out')}
                                 </button>
                             </div>
                         ) : null}
                     </div>
-
-                    <button type="button" className="relative grid h-10 w-10 place-items-center rounded-lg hover:bg-[#F4F1EA]" aria-label={t('nav.cart')} onClick={openDrawer}>
-                        <ShoppingCart className="h-5 w-5" />
-                        {count > 0 ? (
-                            <span className="absolute right-1 top-1 min-w-4 rounded-full bg-[#C9A227] px-1 text-center text-[10px] font-bold text-[#0F2744]">{count}</span>
-                        ) : null}
+                    <button type="button" onClick={openDrawer} aria-label={t('nav.cart')} className="relative grid size-10 place-items-center rounded-lg text-navy hover:bg-surface">
+                        <ShoppingCart size={20} />
+                        {count > 0 ? <span className="absolute -right-0.5 -top-0.5 grid size-5 place-items-center rounded-full bg-accent text-[10px] font-bold text-white">{count}</span> : null}
+                    </button>
+                    <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label={t('nav.categories')} className="grid size-10 place-items-center rounded-lg text-navy hover:bg-surface lg:hidden">
+                        {menuOpen ? <X size={22} /> : <Menu size={22} />}
                     </button>
                 </div>
             </div>
-
-            {mobileOpen ? (
-                <div className="fixed inset-0 z-50 bg-[#0F2744]/40 md:hidden" onClick={() => setMobileOpen(false)}>
-                    <div className="h-full w-[min(100%,20rem)] overflow-y-auto bg-white p-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="mb-4 flex items-center justify-between">
-                            <span className="font-semibold">{t('nav.categories')}</span>
-                            <button type="button" aria-label={t('common.close')} onClick={() => setMobileOpen(false)}><X className="h-5 w-5" /></button>
-                        </div>
-                        <form onSubmit={submitSearch} className="mb-4">
-                            <label className="sr-only" htmlFor="mobile-search">{t('nav.search')}</label>
-                            <input id="mobile-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nav.search_placeholder')} className="h-10 w-full rounded-lg border border-[#0F2744]/15 px-3 text-sm" />
-                        </form>
-                        <Link to="/products" className="block py-2 font-medium" onClick={() => setMobileOpen(false)}>{t('nav.catalog')}</Link>
-                        {roots.map((root) => (
-                            <div key={root.id} className="py-2">
-                                <Link to={`/products/category/${root.id}`} className="flex items-center gap-2 font-medium" onClick={() => setMobileOpen(false)}>
-                                    <CategoryIcon id={root.id} className="h-4 w-4" />
-                                    <span className="break-words">{root.name}</span>
-                                </Link>
-                                {childrenOf(categories, root.id).map((child) => (
-                                    <Link key={child.id} to={`/products/category/${child.id}`} className="ml-6 block py-1 text-sm text-[#5C6B7A]" onClick={() => setMobileOpen(false)}>
-                                        {child.name}
-                                    </Link>
+            <nav className="hidden border-t border-line lg:block">
+                <div className="container-shell flex h-12 items-center gap-8 text-sm font-semibold text-navy">
+                    <div className="group relative flex h-full items-center gap-1">
+                        {t('nav.catalog')}
+                        <ChevronDown size={15} />
+                        <div className="invisible absolute left-0 top-full z-50 w-[min(40rem,70vw)] translate-y-2 rounded-b-xl border border-line bg-white p-3 opacity-0 shadow-card transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                            <div className="grid gap-1 sm:grid-cols-2">
+                                {roots.map((root) => (
+                                    <div key={root.id}>
+                                        <Link to={`/products/category/${root.id}`} className="block rounded-lg px-3 py-2.5 hover:bg-surface hover:text-accent">{root.name}</Link>
+                                        {childrenOf(categories, root.id).slice(0, 4).map((child) => (
+                                            <Link key={child.id} to={`/products/category/${child.id}`} className="block truncate rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-surface hover:text-accent">
+                                                {child.name}
+                                            </Link>
+                                        ))}
+                                    </div>
                                 ))}
                             </div>
-                        ))}
-                        <Link to="/about" className="block py-2" onClick={() => setMobileOpen(false)}>{t('nav.about')}</Link>
-                        <Link to="/contact" className="block py-2" onClick={() => setMobileOpen(false)}>{t('nav.contact')}</Link>
+                        </div>
                     </div>
+                    <NavLink to="/about" className={({ isActive }) => (isActive ? 'text-accent' : 'hover:text-accent')}>{t('nav.about')}</NavLink>
+                    <NavLink to="/contact" className={({ isActive }) => (isActive ? 'text-accent' : 'hover:text-accent')}>{t('nav.contact')}</NavLink>
+                </div>
+            </nav>
+            {menuOpen ? (
+                <div className="border-t border-line bg-white p-4 lg:hidden">
+                    <form onSubmit={search} className="mb-4 flex">
+                        <input value={q} onChange={(e) => setQ(e.target.value)} className="h-11 min-w-0 flex-1 rounded-l-lg border border-line px-3 text-sm" placeholder={t('nav.search_placeholder')} />
+                        <button type="submit" className="grid w-11 place-items-center rounded-r-lg bg-navy text-white"><Search size={18} /></button>
+                    </form>
+                    <div className="space-y-1">
+                        {roots.map((root) => (
+                            <Link onClick={() => setMenuOpen(false)} key={root.id} to={`/products/category/${root.id}`} className="block rounded-lg px-3 py-2 font-semibold text-navy hover:bg-surface">{root.name}</Link>
+                        ))}
+                        <Link onClick={() => setMenuOpen(false)} to="/about" className="block rounded-lg px-3 py-2 font-semibold text-navy">{t('nav.about')}</Link>
+                        <Link onClick={() => setMenuOpen(false)} to="/contact" className="block rounded-lg px-3 py-2 font-semibold text-navy">{t('nav.contact')}</Link>
+                    </div>
+                    <div className="mt-4"><LanguageSwitcher /></div>
                 </div>
             ) : null}
         </header>

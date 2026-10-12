@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ChevronDown, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Filter, Search, SlidersHorizontal, X } from 'lucide-react';
 import { getBrands, getProducts } from '../../../api/catalog.js';
 import { useI18n } from '../../../contexts/i18n.js';
 import { useLanguage } from '../../../contexts/LanguageContext.jsx';
@@ -22,6 +22,7 @@ export default function CatalogPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [filtersOpen, setFiltersOpen] = useState(false);
+    const [qDraft, setQDraft] = useState(params.get('q') || '');
 
     const selectedBrands = params.getAll('brand');
     const q = params.get('q') || '';
@@ -29,6 +30,10 @@ export default function CatalogPage() {
     const minPrice = params.get('min_price') || '';
     const maxPrice = params.get('max_price') || '';
     const inStock = params.get('in_stock') === '1' || params.get('in_stock') === 'true';
+
+    useEffect(() => {
+        setQDraft(q);
+    }, [q]);
 
     useEffect(() => {
         getBrands().then((rows) => setBrands(Array.isArray(rows) ? rows : [])).catch(() => setBrands([]));
@@ -114,66 +119,98 @@ export default function CatalogPage() {
     );
 
     return (
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-semibold">{t('catalog.title')}</h1>
-                    <p className="text-sm text-[#5C6B7A]">{total} {t('catalog.results')}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <button type="button" className="inline-flex items-center gap-2 rounded-lg border border-[#0F2744]/15 bg-white px-3 py-2 text-sm lg:hidden" onClick={() => setFiltersOpen(true)}>
-                        <SlidersHorizontal className="h-4 w-4" /> {t('catalog.filters')}
-                    </button>
-                    <label className="flex items-center gap-2 text-sm">
-                        <span className="text-[#5C6B7A]">{t('catalog.sort')}</span>
-                        <select
-                            className="h-10 rounded-lg border border-[#0F2744]/15 bg-white px-2"
-                            value={sort}
-                            onChange={(e) => updateFilters({ sort: e.target.value })}
-                        >
-                            <option value="newest">{t('catalog.sort.newest')}</option>
-                            <option value="priceAsc">{t('catalog.sort.priceAsc')}</option>
-                            <option value="priceDesc">{t('catalog.sort.priceDesc')}</option>
-                            <option value="name">{t('catalog.sort.name')}</option>
-                        </select>
-                    </label>
-                </div>
+        <div className="container-shell py-8 sm:py-12">
+            <div className="mb-8">
+                <p className="section-kicker">{t('nav.catalog')}</p>
+                <h1 className="section-title">{t('catalog.title')}</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{t('catalog.lead')}</p>
             </div>
-
-            <div className="grid gap-8 lg:grid-cols-[16rem_1fr]">
-                <aside className="hidden lg:block">{sidebar}</aside>
-                <div>
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    updateFilters({ q: qDraft });
+                }}
+                className="mb-5 flex lg:hidden"
+            >
+                <input
+                    value={qDraft}
+                    onChange={(e) => setQDraft(e.target.value)}
+                    placeholder={t('nav.search_placeholder')}
+                    className="h-12 min-w-0 flex-1 rounded-l-lg border border-line px-4 text-sm outline-none"
+                />
+                <button type="submit" aria-label={t('nav.search')} className="grid w-12 place-items-center rounded-r-lg bg-navy text-white">
+                    <Search size={18} />
+                </button>
+            </form>
+            <div className="flex gap-8">
+                <aside className="hidden w-60 shrink-0 lg:block">
+                    <div className="sticky top-40 rounded-xl border border-line bg-white p-5">
+                        <div className="mb-6 flex items-center gap-2 border-b border-line pb-4 font-bold text-navy">
+                            <SlidersHorizontal size={18} />
+                            {t('catalog.filters')}
+                        </div>
+                        {sidebar}
+                    </div>
+                </aside>
+                <div className="min-w-0 flex-1">
+                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-3">
+                        <div className="flex items-center gap-3">
+                            <Button variant="ghost" onClick={() => setFiltersOpen(true)} className="lg:hidden">
+                                <Filter size={17} />
+                                {t('catalog.filters')}
+                            </Button>
+                            <span className="text-sm text-muted">
+                                <strong className="text-navy">{total}</strong> {t('catalog.results')}
+                            </span>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-muted">
+                            <span className="hidden sm:inline">{t('catalog.sort')}:</span>
+                            <select
+                                value={sort}
+                                onChange={(e) => updateFilters({ sort: e.target.value })}
+                                className="h-10 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-navy outline-none"
+                            >
+                                <option value="newest">{t('catalog.sort.newest')}</option>
+                                <option value="priceAsc">{t('catalog.sort.priceAsc')}</option>
+                                <option value="priceDesc">{t('catalog.sort.priceDesc')}</option>
+                                <option value="name">{t('catalog.sort.name')}</option>
+                            </select>
+                        </label>
+                    </div>
                     {error ? (
                         <EmptyState title={t('catalog.error')} action={<Button onClick={() => updateFilters({})}>{t('catalog.retry')}</Button>} />
-                    ) : (
+                    ) : loading ? (
+                        <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+                            {Array.from({ length: 6 }, (_, i) => <ProductSkeleton key={i} />)}
+                        </div>
+                    ) : products.length ? (
                         <>
-                            <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
-                                {loading
-                                    ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
-                                    : products.map((product) => <ProductCard key={product.id} product={product} />)}
+                            <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+                                {products.map((product) => <ProductCard key={product.id} product={product} />)}
                             </div>
-                            {!loading && products.length === 0 ? <div className="mt-6"><EmptyState title={t('catalog.empty')} /></div> : null}
-                            {!loading && products.length < total ? (
+                            {products.length < total ? (
                                 <div className="mt-8 text-center">
                                     <Button variant="ghost" onClick={loadMore}>{t('catalog.load_more')}</Button>
                                 </div>
                             ) : null}
                         </>
+                    ) : (
+                        <EmptyState title={t('catalog.empty')} />
                     )}
                 </div>
             </div>
-
             {filtersOpen ? (
-                <div className="fixed inset-0 z-50 lg:hidden">
-                    <button type="button" className="absolute inset-0 bg-[#0F2744]/40" aria-label={t('common.close')} onClick={() => setFiltersOpen(false)} />
-                    <div className="absolute inset-y-0 left-0 w-[min(100%,20rem)] overflow-y-auto bg-white p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h2 className="font-semibold">{t('catalog.filters')}</h2>
-                            <button type="button" onClick={() => setFiltersOpen(false)} aria-label={t('common.close')}><X className="h-5 w-5" /></button>
+                <>
+                    <button type="button" onClick={() => setFiltersOpen(false)} aria-label={t('common.close')} className="fixed inset-0 z-50 bg-navy/40 lg:hidden" />
+                    <aside className="fixed left-0 top-0 z-50 h-full w-[88%] max-w-sm overflow-y-auto bg-white p-6 lg:hidden">
+                        <div className="mb-7 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-navy">{t('catalog.filters')}</h2>
+                            <button type="button" onClick={() => setFiltersOpen(false)} aria-label={t('common.close')}><X /></button>
                         </div>
                         {sidebar}
-                    </div>
-                </div>
+                        <Button onClick={() => setFiltersOpen(false)} className="mt-8 w-full">{t('catalog.apply')}</Button>
+                    </aside>
+                </>
             ) : null}
         </div>
     );
@@ -192,19 +229,20 @@ function Filters({ t, categories, categoryId, brands, selectedBrands, minPrice, 
     }, [minPrice, maxPrice]);
 
     return (
-        <div className="space-y-8 text-sm">
+        <div className="space-y-7">
             <form
+                className="hidden lg:block"
                 onSubmit={(e) => {
                     e.preventDefault();
                     onChange({ q: e.target.q.value });
                 }}
             >
-                <label className="mb-1 block font-medium" htmlFor="catalog-q">{t('nav.search')}</label>
-                <input id="catalog-q" name="q" defaultValue={q} className="h-10 w-full rounded-lg border border-[#0F2744]/15 px-3" />
+                <h3 className="filter-title">{t('nav.search')}</h3>
+                <input id="catalog-q" name="q" defaultValue={q} className="filter-input" />
             </form>
 
             <div>
-                <h3 className="mb-2 font-medium">{t('catalog.categories')}</h3>
+                <h3 className="filter-title">{t('catalog.categories')}</h3>
                 <CategoryTree
                     t={t}
                     categories={categories}
@@ -214,32 +252,31 @@ function Filters({ t, categories, categoryId, brands, selectedBrands, minPrice, 
             </div>
 
             <div>
-                <h3 className="mb-2 font-medium">{t('catalog.brands')}</h3>
-                <ul className="space-y-1">
+                <h3 className="filter-title">{t('catalog.brands')}</h3>
+                <div className="space-y-2.5">
                     {visibleBrands.map((brand) => {
                         const checked = selectedBrands.includes(brand.name);
                         return (
-                            <li key={brand.name}>
-                                <label className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={checked}
-                                        onChange={() => {
-                                            const next = checked
-                                                ? selectedBrands.filter((name) => name !== brand.name)
-                                                : [...selectedBrands, brand.name];
-                                            onChange({ brand: next });
-                                        }}
-                                    />
-                                    <span className="min-w-0 break-words">{brand.name}</span>
-                                    <span className="ml-auto text-xs text-[#7A8794]">{brand.count}</span>
-                                </label>
-                            </li>
+                            <label key={brand.name} className="flex cursor-pointer items-center gap-3 text-sm text-muted">
+                                <input
+                                    type="checkbox"
+                                    className="size-4 accent-accent"
+                                    checked={checked}
+                                    onChange={() => {
+                                        const next = checked
+                                            ? selectedBrands.filter((name) => name !== brand.name)
+                                            : [...selectedBrands, brand.name];
+                                        onChange({ brand: next });
+                                    }}
+                                />
+                                <span className="min-w-0 break-words">{brand.name}</span>
+                                <span className="ml-auto text-xs text-muted">{brand.count}</span>
+                            </label>
                         );
                     })}
-                </ul>
+                </div>
                 {brands.length > 12 ? (
-                    <button type="button" className="mt-2 text-xs font-medium underline" onClick={() => setShowAllBrands((v) => !v)}>
+                    <button type="button" className="mt-2 text-xs font-bold text-accent" onClick={() => setShowAllBrands((v) => !v)}>
                         {showAllBrands ? t('catalog.show_less') : t('catalog.show_more')}
                     </button>
                 ) : null}
@@ -251,17 +288,25 @@ function Filters({ t, categories, categoryId, brands, selectedBrands, minPrice, 
                     onChange({ min_price: min, max_price: max });
                 }}
             >
-                <h3 className="mb-2 font-medium">{t('catalog.price')}</h3>
+                <h3 className="filter-title">{t('catalog.price')}</h3>
                 <div className="flex gap-2">
-                    <input aria-label={t('catalog.min')} value={min} onChange={(e) => setMin(e.target.value)} className="h-10 w-full rounded-lg border border-[#0F2744]/15 px-2" placeholder={t('catalog.min')} />
-                    <input aria-label={t('catalog.max')} value={max} onChange={(e) => setMax(e.target.value)} className="h-10 w-full rounded-lg border border-[#0F2744]/15 px-2" placeholder={t('catalog.max')} />
+                    <input aria-label={t('catalog.min')} value={min} onChange={(e) => setMin(e.target.value)} inputMode="numeric" className="filter-input" placeholder={t('catalog.min')} />
+                    <input aria-label={t('catalog.max')} value={max} onChange={(e) => setMax(e.target.value)} inputMode="numeric" className="filter-input" placeholder={t('catalog.max')} />
                 </div>
-                <Button type="submit" variant="ghost" className="mt-2 w-full">{t('catalog.apply')}</Button>
+                <Button type="submit" variant="ghost" className="mt-3 w-full">{t('catalog.apply')}</Button>
             </form>
 
-            <label className="flex items-center gap-2">
-                <input type="checkbox" checked={inStock} onChange={(e) => onChange({ in_stock: e.target.checked ? '1' : '' })} />
-                {t('catalog.in_stock')}
+            <label className="flex cursor-pointer items-center justify-between gap-4 text-sm font-semibold text-navy">
+                <span>{t('catalog.in_stock')}</span>
+                <button
+                    type="button"
+                    role="switch"
+                    aria-checked={inStock}
+                    onClick={() => onChange({ in_stock: inStock ? '' : '1' })}
+                    className={`relative h-6 w-11 rounded-full transition ${inStock ? 'bg-accent' : 'bg-slate-200'}`}
+                >
+                    <span className={`absolute top-1 size-4 rounded-full bg-white shadow transition ${inStock ? 'left-6' : 'left-1'}`} />
+                </button>
             </label>
         </div>
     );
@@ -272,16 +317,14 @@ function CategoryTree({ t, categories, activeId, onSelect }) {
     const [open, setOpen] = useState(() => new Set(activeId ? [String(activeId)] : []));
 
     return (
-        <ul className="space-y-1">
-            <li>
-                <button type="button" className={`text-left ${!activeId ? 'font-semibold' : 'text-[#5C6B7A]'}`} onClick={() => onSelect(null)}>
-                    {t('catalog.title')}
-                </button>
-            </li>
+        <div className="space-y-2">
+            <button type="button" className={!activeId ? 'filter-link-active w-full text-left' : 'filter-link w-full text-left'} onClick={() => onSelect(null)}>
+                {t('catalog.all')}
+            </button>
             {roots.map((root) => (
                 <TreeNode key={root.id} node={root} categories={categories} activeId={activeId} open={open} setOpen={setOpen} onSelect={onSelect} />
             ))}
-        </ul>
+        </div>
     );
 }
 
@@ -291,12 +334,12 @@ function TreeNode({ node, categories, activeId, open, setOpen, onSelect }) {
     const active = String(activeId) === String(node.id);
 
     return (
-        <li>
+        <div>
             <div className="flex items-center gap-1">
                 {kids.length ? (
                     <button
                         type="button"
-                        className="grid h-6 w-6 place-items-center"
+                        className="grid h-6 w-6 shrink-0 place-items-center text-muted"
                         aria-label={expanded ? 'Collapse' : 'Expand'}
                         onClick={() => {
                             const next = new Set(open);
@@ -307,18 +350,18 @@ function TreeNode({ node, categories, activeId, open, setOpen, onSelect }) {
                     >
                         {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                     </button>
-                ) : <span className="w-6" />}
-                <button type="button" className={`min-w-0 flex-1 break-words text-left ${active ? 'font-semibold text-[#0F2744]' : 'text-[#5C6B7A]'}`} onClick={() => onSelect(node.id)}>
+                ) : <span className="w-6 shrink-0" />}
+                <button type="button" className={`${active ? 'filter-link-active' : 'filter-link'} min-w-0 flex-1 break-words text-left`} onClick={() => onSelect(node.id)}>
                     {node.name}
                 </button>
             </div>
             {expanded && kids.length ? (
-                <ul className="ml-4 mt-1 space-y-1">
+                <div className="ml-4 mt-1 space-y-1">
                     {kids.map((child) => (
                         <TreeNode key={child.id} node={child} categories={categories} activeId={activeId} open={open} setOpen={setOpen} onSelect={onSelect} />
                     ))}
-                </ul>
+                </div>
             ) : null}
-        </li>
+        </div>
     );
 }

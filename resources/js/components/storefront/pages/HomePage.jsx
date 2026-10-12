@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Headphones, PackageCheck, ShieldCheck, Wrench } from 'lucide-react';
 import { getProducts } from '../../../api/catalog.js';
 import { useI18n } from '../../../contexts/i18n.js';
 import { useLanguage } from '../../../contexts/LanguageContext.jsx';
 import { useStorefrontData } from '../StorefrontData.jsx';
-import CategoryIcon from '../CategoryIcon.jsx';
 import { ProductCard, ProductSkeleton } from '../ui.jsx';
 
 export default function HomePage() {
@@ -14,7 +13,7 @@ export default function HomePage() {
     const { settings, categories } = useStorefrontData();
     const [featured, setFeatured] = useState([]);
     const [loading, setLoading] = useState(true);
-    const slides = (settings.carousel_images || []).filter(Boolean);
+    const images = (settings.carousel_images || []).filter(Boolean);
 
     const tiles = categories
         .filter((c) => c.parent_id == null && c.nav_order != null)
@@ -42,115 +41,125 @@ export default function HomePage() {
         return () => { cancelled = true; };
     }, [lang]);
 
-    return (
-        <div>
-            <Hero slides={slides} fallbackLabel={t('home.hero_fallback')} shopLabel={t('home.shop')} />
+    const slides = [
+        { title: t('home.hero1Title'), text: t('home.hero1Text') },
+        { title: t('home.hero2Title'), text: t('home.hero2Text') },
+        { title: t('home.hero3Title'), text: t('home.hero3Text') },
+    ];
 
-            <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-                <div className="mb-6 flex items-end justify-between">
-                    <h2 className="text-2xl font-semibold">{t('home.categories')}</h2>
-                    <Link to="/products" className="text-sm font-medium text-[#0F2744] underline">{t('home.view_all')}</Link>
+    return (
+        <>
+            <Hero slides={slides} images={images} t={t} />
+
+            <section className="container-shell section-space">
+                <div className="mb-8 flex items-end justify-between gap-4">
+                    <div>
+                        <p className="section-kicker">{t('home.categories')}</p>
+                        <h2 className="section-title">{t('home.categories_text')}</h2>
+                    </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {tiles.map((cat) => (
-                        <Link key={cat.id} to={`/products/category/${cat.id}`} className="flex flex-col gap-3 rounded-2xl border border-[#0F2744]/8 bg-white p-4 shadow-sm transition hover:border-[#C9A227] hover:shadow-md">
-                            <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#0F2744] text-white">
-                                <CategoryIcon id={cat.id} className="h-5 w-5" />
-                            </span>
-                            <span className="break-words text-sm font-semibold leading-snug">{cat.name}</span>
-                            <span className="text-xs text-[#7A8794]">{cat.product_count} {t('home.products_count')}</span>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {tiles.map((cat, index) => (
+                        <Link key={cat.id} to={`/products/category/${cat.id}`} className="group relative min-h-64 overflow-hidden rounded-xl border border-line bg-surface p-7 transition hover:border-navy/30 hover:shadow-card">
+                            <span className="text-6xl font-black text-navy/5">{String(index + 1).padStart(2, '0')}</span>
+                            <div className="absolute inset-x-7 bottom-7">
+                                <div className={`mb-4 h-1 w-12 rounded-full ${index === 0 ? 'bg-accent' : 'bg-navy'}`} />
+                                <h3 className="text-xl font-bold text-navy break-words">{cat.name}</h3>
+                                <p className="mt-2 text-sm leading-6 text-muted">{cat.product_count} {t('home.products_count')}</p>
+                                <ArrowRight className="mt-5 transition group-hover:translate-x-1" size={18} />
+                            </div>
                         </Link>
                     ))}
                 </div>
             </section>
 
-            <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-                <h2 className="mb-6 text-2xl font-semibold">{t('home.featured')}</h2>
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                    {loading
-                        ? Array.from({ length: 8 }).map((_, i) => <ProductSkeleton key={i} />)
-                        : featured.map((product) => <ProductCard key={product.id} product={product} />)}
+            <section className="bg-surface">
+                <div className="container-shell section-space">
+                    <div className="mb-8 flex items-end justify-between gap-4">
+                        <div>
+                            <p className="section-kicker">{t('home.featured')}</p>
+                            <h2 className="section-title">{t('home.featured')}</h2>
+                        </div>
+                        <Link to="/products" className="shrink-0 text-sm font-bold text-accent hover:text-accent-dark">{t('home.view_all')}</Link>
+                    </div>
+                    <div className="grid auto-cols-[78%] grid-flow-col gap-4 overflow-x-auto pb-3 sm:auto-cols-[45%] lg:grid-flow-row lg:grid-cols-4 lg:overflow-visible">
+                        {loading
+                            ? Array.from({ length: 8 }, (_, i) => <ProductSkeleton key={i} />)
+                            : featured.map((product) => <ProductCard key={product.id} product={product} />)}
+                    </div>
                 </div>
             </section>
 
-            <section className="bg-white">
-                <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-3 sm:px-6 lg:px-8">
-                    <h2 className="sr-only">{t('home.trust.title')}</h2>
+            <section className="container-shell py-10">
+                <div className="grid divide-y divide-line rounded-xl border border-line bg-white sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
                     {[
-                        ['home.trust.stock', 'home.trust.stock_body'],
-                        ['home.trust.support', 'home.trust.support_body'],
-                        ['home.trust.b2b', 'home.trust.b2b_body'],
-                    ].map(([title, body]) => (
-                        <div key={title}>
-                            <h3 className="font-semibold">{t(title)}</h3>
-                            <p className="mt-2 text-sm text-[#5C6B7A]">{t(body)}</p>
+                        [Wrench, 'home.installation', 'home.installation_text'],
+                        [ShieldCheck, 'home.warranty', 'home.warranty_text'],
+                        [Headphones, 'home.support', 'home.support_text'],
+                        [PackageCheck, 'home.delivery', 'home.delivery_text'],
+                    ].map(([Icon, title, text]) => (
+                        <div key={title} className="flex gap-4 p-6">
+                            <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent"><Icon size={21} /></span>
+                            <div>
+                                <h3 className="text-sm font-bold text-navy">{t(title)}</h3>
+                                <p className="mt-1 text-xs leading-5 text-muted">{t(text)}</p>
+                            </div>
                         </div>
                     ))}
                 </div>
             </section>
-        </div>
+        </>
     );
 }
 
-function Hero({ slides, fallbackLabel, shopLabel }) {
-    const [index, setIndex] = useState(0);
-    const startX = useRef(null);
-    const count = slides.length;
+function Hero({ slides, images, t }) {
+    const [slide, setSlide] = useState(0);
+    const touch = useRef(0);
 
     useEffect(() => {
-        if (count <= 1) return undefined;
-        const id = setInterval(() => setIndex((i) => (i + 1) % count), 5000);
-        return () => clearInterval(id);
-    }, [count]);
+        const timer = setInterval(() => setSlide((s) => (s + 1) % slides.length), 6000);
+        return () => clearInterval(timer);
+    }, [slides.length]);
 
-    function go(next) {
-        if (count === 0) return;
-        setIndex((next + count) % count);
+    function move(direction) {
+        setSlide((slide + direction + slides.length) % slides.length);
     }
 
     return (
-        <section className="relative overflow-hidden bg-[#0F2744]">
+        <section className="container-shell pt-5 sm:pt-7">
             <div
-                className="relative mx-auto h-64 max-w-7xl sm:h-80 lg:h-[28rem]"
-                onTouchStart={(e) => { startX.current = e.touches[0].clientX; }}
+                onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
                 onTouchEnd={(e) => {
-                    if (startX.current == null) return;
-                    const dx = e.changedTouches[0].clientX - startX.current;
-                    if (dx > 40) go(index - 1);
-                    if (dx < -40) go(index + 1);
-                    startX.current = null;
+                    const delta = e.changedTouches[0].clientX - touch.current;
+                    if (Math.abs(delta) > 45) move(delta > 0 ? -1 : 1);
                 }}
+                className="relative min-h-[31rem] overflow-hidden rounded-2xl bg-navy sm:min-h-[34rem]"
             >
-                {count === 0 ? (
-                    <div className="flex h-full flex-col items-center justify-center gap-4 px-4 text-center text-white">
-                        <h1 className="max-w-2xl text-3xl font-semibold sm:text-4xl">{fallbackLabel}</h1>
-                        <Link to="/products" className="rounded-lg bg-[#C9A227] px-5 py-2.5 text-sm font-medium text-[#0F2744]">{shopLabel}</Link>
+                {images.map((image, index) => (
+                    <img key={image} src={image} alt="" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${index === slide % Math.max(images.length, 1) ? 'opacity-45' : 'opacity-0'}`} />
+                ))}
+                <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/75 to-navy/10" />
+                <div className="relative z-10 flex min-h-[31rem] max-w-3xl flex-col justify-center px-6 py-16 text-white sm:min-h-[34rem] sm:px-12 lg:px-20">
+                    <div className="mb-5 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-white/70">
+                        <span className="h-px w-8 bg-accent" />
+                        {t('home.hero_eyebrow')}
                     </div>
-                ) : (
-                    slides.map((src, i) => (
-                        <img
-                            key={src}
-                            src={src}
-                            alt=""
-                            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i === index ? 'opacity-100' : 'opacity-0'}`}
-                        />
-                    ))
-                )}
-                {count > 1 ? (
-                    <>
-                        <button type="button" className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/80" aria-label="Previous" onClick={() => go(index - 1)}>
-                            <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        <button type="button" className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/80" aria-label="Next" onClick={() => go(index + 1)}>
-                            <ChevronRight className="h-5 w-5" />
-                        </button>
-                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                            {slides.map((_, i) => (
-                                <button key={i} type="button" aria-label={`Slide ${i + 1}`} className={`h-2 w-2 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`} onClick={() => go(i)} />
-                            ))}
-                        </div>
-                    </>
-                ) : null}
+                    <h1 className="max-w-2xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{slides[slide].title}</h1>
+                    <p className="mt-6 max-w-xl text-base leading-7 text-white/75 sm:text-lg">{slides[slide].text}</p>
+                    <div className="mt-8 flex flex-wrap gap-3">
+                        <Link to="/products" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-bold hover:bg-accent-dark">{t('home.explore')}<ArrowRight size={17} /></Link>
+                        <Link to="/contact" className="inline-flex min-h-12 items-center rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold backdrop-blur hover:bg-white/20">{t('home.consultation')}</Link>
+                    </div>
+                </div>
+                <div className="absolute bottom-6 right-6 z-20 flex gap-2">
+                    <button type="button" aria-label={t('home.prev')} onClick={() => move(-1)} className="grid size-11 place-items-center rounded-lg border border-white/20 bg-white/10 text-white backdrop-blur hover:bg-white/20"><ChevronLeft size={20} /></button>
+                    <button type="button" aria-label={t('home.next')} onClick={() => move(1)} className="grid size-11 place-items-center rounded-lg border border-white/20 bg-white/10 text-white backdrop-blur hover:bg-white/20"><ChevronRight size={20} /></button>
+                </div>
+                <div className="absolute bottom-8 left-6 z-20 flex gap-2 sm:left-12 lg:left-20">
+                    {slides.map((_, index) => (
+                        <button key={index} type="button" aria-label={`${index + 1}`} onClick={() => setSlide(index)} className={`h-1.5 rounded-full transition-all ${index === slide ? 'w-8 bg-accent' : 'w-4 bg-white/40'}`} />
+                    ))}
+                </div>
             </div>
         </section>
     );

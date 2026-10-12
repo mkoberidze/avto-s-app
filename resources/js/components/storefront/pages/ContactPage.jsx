@@ -1,26 +1,27 @@
 import React from 'react';
+import { Mail, MapPin, Phone } from 'lucide-react';
 import { useI18n } from '../../../contexts/i18n.js';
 
 export default function ContactPage() {
     const t = useI18n();
     return (
-        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-            <h1 className="text-3xl font-semibold">{t('contact.title')}</h1>
-            <p className="mt-4 text-[#5C6B7A]">{t('contact.body')}</p>
-            <dl className="mt-8 space-y-4 rounded-2xl bg-white p-6">
-                <div>
-                    <dt className="text-xs uppercase tracking-wide text-[#7A8794]">{t('contact.phone_label')}</dt>
-                    <dd className="mt-1 text-lg"><a href="tel:+995322112233" className="hover:underline">{t('contact.phone')}</a></dd>
+        <div className="container-shell py-12 sm:py-20">
+            <div className="max-w-xl">
+                <p className="section-kicker">{t('nav.contact')}</p>
+                <h1 className="section-title">{t('contact.title')}</h1>
+                <p className="mt-4 max-w-lg leading-7 text-muted">{t('contact.body')}</p>
+                <div className="mt-10 space-y-5">
+                    {[[Phone, t('contact.phone_label'), t('contact.phone')], [Mail, t('contact.email_label'), t('contact.email')], [MapPin, t('contact.address_label'), t('contact.address')]].map(([Icon, label, value], i) => (
+                        <div key={i} className="flex items-center gap-4">
+                            <span className="grid size-11 place-items-center rounded-lg bg-surface text-navy"><Icon size={19} /></span>
+                            <div>
+                                <p className="text-xs text-muted">{label}</p>
+                                <strong className="text-sm text-navy">{value}</strong>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-                <div>
-                    <dt className="text-xs uppercase tracking-wide text-[#7A8794]">{t('contact.email_label')}</dt>
-                    <dd className="mt-1 text-lg"><a href="mailto:info@sentra.ge" className="hover:underline">{t('contact.email')}</a></dd>
-                </div>
-                <div>
-                    <dt className="text-xs uppercase tracking-wide text-[#7A8794]">{t('contact.address_label')}</dt>
-                    <dd className="mt-1 text-lg">{t('contact.address')}</dd>
-                </div>
-            </dl>
+            </div>
         </div>
     );
 }
