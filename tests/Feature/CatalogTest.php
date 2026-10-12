@@ -233,6 +233,44 @@ class CatalogTest extends TestCase
         rmdir($dir);
     }
 
+    public function test_category_fallback_applies_only_when_missing_and_is_idempotent(): void
+    {
+        config(['catalog.category_fallbacks' => [115 => 77, 32 => 999]]);
+
+        $products = CatalogFeed::products();
+        $products[] = CatalogFeed::product('113', '115', 'FIRE-113', 'Mapped fire item', 'Unipos', '10.00', '1', '**');
+
+        Http::fake([
+            CatalogFeed::categoriesUrl() => Http::response(CatalogFeed::categories()),
+            CatalogFeed::productsUrl() => Http::response($products),
+        ]);
+
+        $this->artisan('catalog:sync')->assertSuccessful();
+
+        $this->assertSame(77, (int) Product::query()->find(113)->category_id);
+        $this->assertSame(32, (int) Product::query()->find(109)->category_id);
+        $this->assertSame(555, (int) Product::query()->find(106)->category_id);
+
+        $this->artisan('catalog:sync')->assertSuccessful();
+        $this->assertSame(77, (int) Product::query()->find(113)->category_id);
+        $this->assertSame(32, (int) Product::query()->find(109)->category_id);
+    }
+
+    public function test_featured_filter_returns_only_featured_products(): void
+    {
+        $this->fakeFeed();
+        $this->artisan('catalog:sync')->assertSuccessful();
+
+        $this->assertSame(0, $this->getJson('/api/products?featured=1')->json('total'));
+
+        Product::query()->whereKey(101)->update(['is_featured' => true]);
+        Product::query()->whereKey(102)->update(['is_featured' => true, 'is_hidden' => true]);
+
+        $payload = $this->getJson('/api/products?featured=1')->json();
+        $this->assertSame(1, $payload['total']);
+        $this->assertSame('101', $payload['products'][0]['id']);
+    }
+
     public function test_html_in_descriptions_is_sanitized_on_output(): void
     {
         $this->fakeFeed();

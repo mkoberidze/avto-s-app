@@ -10,7 +10,3 @@ Route::get('/', function () {
 Route::get('/{any}', function () {
     return view('welcome');
 })->where('any', '^(?!api)(?!storage)(?!favicon\.ico)(?!robots\.txt).*$');
-
-Route::get('/api/check-ip', function () {
-    return 'test';
-});

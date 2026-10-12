@@ -49,6 +49,9 @@ class SyncCatalog extends Command
             ];
         }
 
+        $knownCategoryIds = array_flip(array_column($categoryRows, 'id'));
+        $fallbacks = config('catalog.category_fallbacks', []);
+
         $existingProductIds = Product::query()->pluck('id')->map(fn ($id) => (int) $id)->all();
         $existingSet = array_flip($existingProductIds);
 
@@ -72,11 +75,18 @@ class SyncCatalog extends Command
             $full = isset($item['full_description']) ? (string) $item['full_description'] : '';
             $images = $item['images'] ?? [];
             $id = (int) $item['product_id'];
+            $categoryId = isset($item['category_id']) && $item['category_id'] !== '' ? (int) $item['category_id'] : null;
+            if ($categoryId !== null && ! isset($knownCategoryIds[$categoryId])) {
+                $mapped = $fallbacks[$categoryId] ?? null;
+                if ($mapped !== null) {
+                    $categoryId = (int) $mapped;
+                }
+            }
 
             $productRows[] = [
                 'id' => $id,
                 'product_code' => (string) ($item['product_code'] ?? ''),
-                'category_id' => isset($item['category_id']) && $item['category_id'] !== '' ? (int) $item['category_id'] : null,
+                'category_id' => $categoryId,
                 'name_ka' => $name,
                 'short_description_ka' => $short === '' ? null : $short,
                 'description_ka' => $full === '' ? null : $full,

@@ -44,7 +44,7 @@ export default function PhoneAuthModal() {
     }
 
     return (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/20" onClick={closePhoneModal} />
             <div className="relative z-10 w-full max-w-sm rounded-xl bg-white p-6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-black/5">
                 <div className="flex items-center justify-between mb-4">

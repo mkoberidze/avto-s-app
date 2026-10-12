@@ -1,43 +1,54 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext.jsx';
-import { LanguageProvider, useLanguage } from '../contexts/LanguageContext.jsx';
-import Navbar from './layout/Navbar.jsx';
+import { LanguageProvider } from '../contexts/LanguageContext.jsx';
+import { CartProvider } from '../contexts/CartContext.jsx';
 import PhoneAuthModal from './ui/PhoneAuthModal.jsx';
-import LandingPage from './pages/LandingPage.jsx';
-import FormsPage from './pages/FormsPage.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import StorefrontLayout from './storefront/StorefrontLayout.jsx';
+import LegacyLayout from './layout/LegacyLayout.jsx';
+import HomePage from './storefront/pages/HomePage.jsx';
+import CatalogPage from './storefront/pages/CatalogPage.jsx';
+import ProductPage from './storefront/pages/ProductPage.jsx';
+import CartPage from './storefront/pages/CartPage.jsx';
+import CheckoutPlaceholder from './storefront/pages/CheckoutPlaceholder.jsx';
+import AboutStorePage from './storefront/pages/AboutStorePage.jsx';
+import ContactPage from './storefront/pages/ContactPage.jsx';
+import NotFoundPage from './storefront/pages/NotFoundPage.jsx';
+import FormsPage from './pages/FormsPage.jsx';
 import FormDetailsPage from './pages/FormDetailsPage.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import AdminFormDetail from './pages/AdminFormDetail.jsx';
 import AdminPagesEditor from './pages/AdminPagesEditor.jsx';
 import AdminSettings from './pages/AdminSettings.jsx';
 import ServicesPage from './pages/ServicesPage.jsx';
-import AboutPage from './pages/AboutPage.jsx';
 
 function AppShell() {
-    const { lang } = useLanguage();
     return (
         <BrowserRouter>
-            <div className={`min-h-screen bg-[#FAFAF9] flex flex-col app-uppercase ${lang === 'ka' ? 'lang-ka' : ''}`}>
-                <Navbar />
-                <main className="flex-1 overflow-y-auto pt-16">
-                    <div className="pb-20">
-                        <Routes>
-                            <Route path="/" element={<LandingPage />} />
-                            <Route path="/services" element={<ServicesPage />} />
-                            <Route path="/about" element={<AboutPage />} />
-                            <Route path="/forms" element={<ProtectedRoute><FormsPage /></ProtectedRoute>} />
-                            <Route path="/forms/:id" element={<ProtectedRoute><FormDetailsPage /></ProtectedRoute>} />
-                            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-                            <Route path="/admin/pages" element={<ProtectedRoute><AdminPagesEditor /></ProtectedRoute>} />
-                            <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
-                            <Route path="/admin/form/:id" element={<ProtectedRoute><AdminFormDetail /></ProtectedRoute>} />
-                        </Routes>
-                    </div>
-                </main>
-                <PhoneAuthModal />
-            </div>
+            <Routes>
+                <Route element={<LegacyLayout />}>
+                    <Route path="/services" element={<ServicesPage />} />
+                    <Route path="/forms" element={<ProtectedRoute><FormsPage /></ProtectedRoute>} />
+                    <Route path="/forms/:id" element={<ProtectedRoute><FormDetailsPage /></ProtectedRoute>} />
+                    <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                    <Route path="/admin/pages" element={<ProtectedRoute><AdminPagesEditor /></ProtectedRoute>} />
+                    <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+                    <Route path="/admin/form/:id" element={<ProtectedRoute><AdminFormDetail /></ProtectedRoute>} />
+                </Route>
+                <Route element={<StorefrontLayout />}>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/products" element={<CatalogPage />} />
+                    <Route path="/products/category/:id" element={<CatalogPage />} />
+                    <Route path="/products/:id" element={<ProductPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route path="/checkout" element={<CheckoutPlaceholder />} />
+                    <Route path="/about" element={<AboutStorePage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                </Route>
+            </Routes>
+            <PhoneAuthModal />
         </BrowserRouter>
     );
 }
@@ -46,7 +57,9 @@ export default function App() {
     return (
         <AuthProvider>
             <LanguageProvider>
-                <AppShell />
+                <CartProvider>
+                    <AppShell />
+                </CartProvider>
             </LanguageProvider>
         </AuthProvider>
     );

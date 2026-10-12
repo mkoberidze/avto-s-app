@@ -108,6 +108,10 @@ class CatalogController extends Controller
             $query->where('in_stock', true);
         }
 
+        if ($request->has('featured') && $request->boolean('featured')) {
+            $query->where('is_featured', true);
+        }
+
         $sort = (string) $request->query('sort', 'newest');
         match ($sort) {
             'priceAsc' => $query->orderBy('price')->orderBy('id'),

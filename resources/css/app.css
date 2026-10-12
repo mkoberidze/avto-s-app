@@ -5,6 +5,7 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.jsx';
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
@@ -19,3 +20,9 @@
 .app-uppercase {
     text-transform: uppercase;
 }
+
+.product-html p { margin-bottom: 0.75rem; }
+.product-html ul, .product-html ol { margin: 0.75rem 0 0.75rem 1.25rem; list-style: disc; }
+.product-html table { width: 100%; border-collapse: collapse; }
+.product-html td, .product-html th { border: 1px solid #e5e7eb; padding: 0.35rem 0.5rem; }
+.product-html a { text-decoration: underline; }
