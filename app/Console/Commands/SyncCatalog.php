@@ -18,6 +18,7 @@ class SyncCatalog extends Command
     {
         ini_set('memory_limit', '512M');
 
+        $wallStart = microtime(true);
         $startedAt = Carbon::now();
         $timeout = (int) config('catalog.timeout', 60);
         $brandKey = (string) config('catalog.brand_feature_key');
@@ -158,6 +159,12 @@ class SyncCatalog extends Command
             count($brands)
         ));
 
+        $this->info(sprintf(
+            'duration: %.2fs | peak memory: %.1f MB',
+            microtime(true) - $wallStart,
+            memory_get_peak_usage(true) / 1024 / 1024
+        ));
+
         return self::SUCCESS;
     }
 
@@ -166,6 +173,13 @@ class SyncCatalog extends Command
      */
     private function fetchList(string $url, int $timeout, string $label): ?array
     {
+        $path = $this->localPath($url);
+        if ($path !== null) {
+            $data = $this->decodeJsonList($this->readLocalFile($path, $label), $label);
+
+            return $data;
+        }
+
         try {
             $response = Http::timeout($timeout)->retry(2, 200)->get($url);
         } catch (\Throwable $e) {
@@ -180,7 +194,52 @@ class SyncCatalog extends Command
             return null;
         }
 
-        $data = $response->json();
+        return $this->decodeJsonList($response->body(), $label);
+    }
+
+    private function localPath(string $url): ?string
+    {
+        if (str_starts_with($url, 'file://')) {
+            $path = parse_url($url, PHP_URL_PATH);
+
+            return is_string($path) && $path !== '' ? $path : null;
+        }
+
+        if (str_starts_with($url, '/') && ! str_contains($url, '://')) {
+            return $url;
+        }
+
+        return null;
+    }
+
+    private function readLocalFile(string $path, string $label): ?string
+    {
+        if (! is_readable($path)) {
+            $this->error("Failed to fetch {$label}: cannot read {$path}");
+
+            return null;
+        }
+
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            $this->error("Failed to fetch {$label}: cannot read {$path}");
+
+            return null;
+        }
+
+        return $raw;
+    }
+
+    /**
+     * @return list<mixed>|null
+     */
+    private function decodeJsonList(?string $raw, string $label): ?array
+    {
+        if ($raw === null) {
+            return null;
+        }
+
+        $data = json_decode($raw, true);
         if (! is_array($data) || $data === [] || ! array_is_list($data)) {
             $this->error("{$label} feed is empty or not a JSON array");
 

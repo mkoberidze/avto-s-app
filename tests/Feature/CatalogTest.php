@@ -209,6 +209,30 @@ class CatalogTest extends TestCase
         $this->assertTrue($categoryIds->contains('32'));
     }
 
+    public function test_sync_from_local_file_path(): void
+    {
+        $dir = sys_get_temp_dir().'/catalog-feed-'.uniqid();
+        mkdir($dir);
+        file_put_contents($dir.'/category.json', json_encode(CatalogFeed::categories(), JSON_UNESCAPED_UNICODE));
+        file_put_contents($dir.'/products.json', json_encode(CatalogFeed::products(), JSON_UNESCAPED_UNICODE));
+
+        config([
+            'catalog.categories_url' => $dir.'/category.json',
+            'catalog.products_url' => $dir.'/products.json',
+        ]);
+
+        Http::fake();
+
+        $this->artisan('catalog:sync')->assertSuccessful();
+
+        $this->assertSame(8, Category::query()->count());
+        $this->assertSame(12, Product::query()->count());
+        Http::assertNothingSent();
+
+        array_map('unlink', glob($dir.'/*') ?: []);
+        rmdir($dir);
+    }
+
     public function test_html_in_descriptions_is_sanitized_on_output(): void
     {
         $this->fakeFeed();
