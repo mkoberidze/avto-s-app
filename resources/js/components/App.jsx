@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext.jsx';
 import { LanguageProvider } from '../contexts/LanguageContext.jsx';
 import { CartProvider } from '../contexts/CartContext.jsx';
@@ -17,11 +17,9 @@ import ContactPage from './storefront/pages/ContactPage.jsx';
 import NotFoundPage from './storefront/pages/NotFoundPage.jsx';
 import FormsPage from './pages/FormsPage.jsx';
 import FormDetailsPage from './pages/FormDetailsPage.jsx';
-import AdminPanel from './pages/AdminPanel.jsx';
-import AdminFormDetail from './pages/AdminFormDetail.jsx';
-import AdminPagesEditor from './pages/AdminPagesEditor.jsx';
-import AdminSettings from './pages/AdminSettings.jsx';
 import ServicesPage from './pages/ServicesPage.jsx';
+import AdminLayout from './admin/AdminLayout.jsx';
+import AdminPage from './admin/AdminPage.jsx';
 
 function AppShell() {
     return (
@@ -31,10 +29,10 @@ function AppShell() {
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/forms" element={<ProtectedRoute><FormsPage /></ProtectedRoute>} />
                     <Route path="/forms/:id" element={<ProtectedRoute><FormDetailsPage /></ProtectedRoute>} />
-                    <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-                    <Route path="/admin/pages" element={<ProtectedRoute><AdminPagesEditor /></ProtectedRoute>} />
-                    <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
-                    <Route path="/admin/form/:id" element={<ProtectedRoute><AdminFormDetail /></ProtectedRoute>} />
+                </Route>
+                <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<Navigate to="products" replace />} />
+                    <Route path=":section" element={<AdminPage />} />
                 </Route>
                 <Route element={<StorefrontLayout />}>
                     <Route path="/" element={<HomePage />} />

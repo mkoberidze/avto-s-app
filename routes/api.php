@@ -8,6 +8,8 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\AdminProductController;
+use App\Http\Controllers\AdminCategoryController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/otp/request', [AuthController::class, 'requestOtp']);
@@ -53,5 +55,10 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::post('/settings/upload-carousel', [SettingsController::class, 'uploadCarouselImage']);
     Route::get('/settings', [SettingsController::class, 'index']);
     Route::post('/settings', [SettingsController::class, 'update']);
+    Route::get('/products', [AdminProductController::class, 'index']);
+    Route::get('/products/{id}', [AdminProductController::class, 'show'])->whereNumber('id');
+    Route::put('/products/{id}', [AdminProductController::class, 'update'])->whereNumber('id');
+    Route::get('/categories', [AdminCategoryController::class, 'index']);
+    Route::put('/categories/{id}', [AdminCategoryController::class, 'update'])->whereNumber('id');
 });
 

@@ -53,4 +53,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Form::class);
     }
+
+    public function clientRole(): string
+    {
+        return $this->hasRole('admin') ? 'admin' : 'user';
+    }
 }

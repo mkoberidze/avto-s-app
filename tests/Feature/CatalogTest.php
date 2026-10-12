@@ -294,6 +294,33 @@ class CatalogTest extends TestCase
         $this->assertCount(2, $this->getJson('/api/products/101')->json('images'));
     }
 
+    public function test_public_api_uses_translation_name_and_sanitizes_translated_description(): void
+    {
+        $this->fakeFeed();
+        $this->artisan('catalog:sync')->assertSuccessful();
+
+        Product::query()->whereKey(101)->update([
+            'translations' => [
+                'en' => [
+                    'name' => 'English camera',
+                    'description' => '<p>Hello EN</p><script>alert(1)</script>',
+                ],
+            ],
+        ]);
+
+        $en = $this->getJson('/api/products/101?language=en')->json();
+        $this->assertSame('English camera', $en['name']);
+        $this->assertStringContainsString('<p>Hello EN</p>', $en['description']);
+        $this->assertStringNotContainsString('<script', $en['description']);
+
+        $this->assertSame('English camera', $this->getJson('/api/products?q=CAM-101&language=en')->json('products.0.name'));
+
+        $ru = $this->getJson('/api/products/101?language=ru')->json();
+        $this->assertSame('IP camera A', $ru['name']);
+        $ka = $this->getJson('/api/products/101?language=ka')->json();
+        $this->assertSame('IP camera A', $ka['name']);
+    }
+
     private function fakeFeed(): void
     {
         Http::fake([

@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
 import { LanguageSwitcher } from './Header.jsx';
+import { useStorefrontData } from './StorefrontData.jsx';
 
 export default function Footer() {
     const t = useI18n();
+    const { settings } = useStorefrontData();
+    const phone = settings.phone || t('contact.phone');
+    const email = settings.contact_email || t('contact.email');
+
     return (
         <footer className="mt-20 bg-navy text-white">
             <div className="container-shell grid gap-10 py-14 md:grid-cols-4">
@@ -27,8 +32,8 @@ export default function Footer() {
                 <div>
                     <h3 className="mb-4 font-bold">{t('contact.title')}</h3>
                     <div className="space-y-2 text-sm text-white/65">
-                        <p>{t('contact.phone')}</p>
-                        <p>{t('contact.email')}</p>
+                        <p>{phone}</p>
+                        <p>{email}</p>
                     </div>
                     <div className="mt-5"><LanguageSwitcher dark /></div>
                 </div>

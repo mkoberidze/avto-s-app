@@ -93,9 +93,9 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        // Ensure base roles exist and assign default 'user' role on first auth
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
-        if (! $user->hasRole('user')) {
+        if (! $user->hasRole('admin') && ! $user->hasRole('user')) {
             $user->assignRole($userRole);
         }
 
@@ -109,7 +109,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'phone' => $user->phone,
                 'name' => $user->name,
-                'role' => $user->getRoleNames()->first(),
+                'role' => $user->clientRole(),
             ],
         ]);
     }
@@ -124,7 +124,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'phone' => $user->phone,
                 'name' => $user->name,
-                'role' => $user->getRoleNames()->first(),
+                'role' => $user->clientRole(),
             ],
         ]);
     }
