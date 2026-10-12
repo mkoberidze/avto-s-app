@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\CatalogController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/otp/request', [AuthController::class, 'requestOtp']);
@@ -31,6 +32,13 @@ Route::get('pages/{slug}', [PageController::class, 'show']);
 
 // Public settings
 Route::get('settings', [SettingsController::class, 'index']);
+
+Route::middleware('throttle:120,1')->group(function () {
+    Route::get('categories', [CatalogController::class, 'categories']);
+    Route::get('brands', [CatalogController::class, 'brands']);
+    Route::get('products', [CatalogController::class, 'products']);
+    Route::get('products/{id}', [CatalogController::class, 'show'])->whereNumber('id');
+});
 
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/forms', [AdminController::class, 'index']);
