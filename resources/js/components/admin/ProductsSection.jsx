@@ -19,6 +19,8 @@ export default function ProductsSection() {
     const [categoryId, setCategoryId] = useState('');
     const [brand, setBrand] = useState('');
     const [sort, setSort] = useState('newest');
+    const [translation, setTranslation] = useState('');
+    const [translationLang, setTranslationLang] = useState('en');
     const [categories, setCategories] = useState([]);
     const [brands, setBrands] = useState([]);
     const [editingId, setEditingId] = useState(null);
@@ -37,6 +39,10 @@ export default function ProductsSection() {
         if (featured) params.featured = 1;
         if (categoryId) params.category_id = categoryId;
         if (brand) params.brand = brand;
+        if (translation) {
+            params.translation = translation;
+            params.lang = translationLang;
+        }
         return getAdminProducts(params)
             .then((data) => {
                 setItems(data.products || []);
@@ -50,7 +56,7 @@ export default function ProductsSection() {
     useEffect(() => {
         load(1);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [status, featured, categoryId, brand, sort]);
+    }, [status, featured, categoryId, brand, sort, translation, translationLang]);
 
     async function toggle(product, field) {
         const previous = items;
@@ -105,6 +111,16 @@ export default function ProductsSection() {
                         <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="size-4 accent-accent" />
                         {t('admin.featured')}
                     </label>
+                    <select value={translation} onChange={(e) => setTranslation(e.target.value)} className="h-11 rounded-lg border border-line bg-white px-3 text-sm">
+                        <option value="">{t('admin.translation_filter')}</option>
+                        <option value="missing">{t('admin.translation_missing')}</option>
+                        <option value="machine">{t('admin.translation_machine')}</option>
+                        <option value="manual">{t('admin.translation_manual')}</option>
+                    </select>
+                    <select value={translationLang} onChange={(e) => setTranslationLang(e.target.value)} className="h-11 rounded-lg border border-line bg-white px-3 text-sm">
+                        <option value="en">{t('admin.lang_en')}</option>
+                        <option value="ru">{t('admin.lang_ru')}</option>
+                    </select>
                     <select value={sort} onChange={(e) => setSort(e.target.value)} className="h-11 rounded-lg border border-line bg-white px-3 text-sm">
                         <option value="newest">{t('catalog.sort.newest')}</option>
                         <option value="name">{t('catalog.sort.name')}</option>
@@ -144,7 +160,10 @@ export default function ProductsSection() {
                                                 {product.image ? <img src={product.image} alt="" className="size-12 rounded-lg bg-surface object-cover" /> : <span className="size-12 rounded-lg bg-surface" />}
                                                 <div>
                                                     <p className="max-w-sm line-clamp-2 font-bold text-navy">{product.name_ka}</p>
-                                                    <p className="text-xs text-muted">EN {product.has_en ? t('admin.has_translation') : t('admin.missing_translation')} · RU {product.has_ru ? t('admin.has_translation') : t('admin.missing_translation')}</p>
+                                                    <p className="mt-1 flex flex-wrap gap-1">
+                                                        <TranslationBadge lang="EN" state={product.translation_en} t={t} />
+                                                        <TranslationBadge lang="RU" state={product.translation_ru} t={t} />
+                                                    </p>
                                                 </div>
                                             </div>
                                         </td>
@@ -198,6 +217,20 @@ function Badge({ className, children }) {
     return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${className}`}>{children}</span>;
 }
 
+function TranslationBadge({ lang, state, t }) {
+    const label = state === 'manual' ? t('admin.translation_manual') : state === 'machine' ? t('admin.translation_machine') : t('admin.translation_missing');
+    const cls = state === 'manual' ? 'bg-emerald-50 text-emerald-700' : state === 'machine' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600';
+    return <Badge className={cls}>{lang} {label}</Badge>;
+}
+
+function FieldBadge({ product, lang, field, t }) {
+    const value = product.translations?.[lang]?.[field];
+    const manual = Array.isArray(product.translations?.[lang]?._manual) && product.translations[lang]._manual.includes(field);
+    if (manual) return <span className="ml-2 text-xs font-bold uppercase tracking-wide text-emerald-700">{t('admin.manual_translation')}</span>;
+    if (value) return <span className="ml-2 text-xs font-bold uppercase tracking-wide text-blue-700">{t('admin.machine_translated')}</span>;
+    return null;
+}
+
 function StockPill({ product, t }) {
     if (!product.in_stock) return <Badge className="bg-red-50 text-red-700">{t('stock.out')}</Badge>;
     if (product.stock_level === '*') return <Badge className="bg-amber-50 text-amber-700">{t('stock.low')}</Badge>;
@@ -220,6 +253,8 @@ function pickList(detail) {
         image: detail.image,
         has_en: detail.has_en,
         has_ru: detail.has_ru,
+        translation_en: detail.translation_en,
+        translation_ru: detail.translation_ru,
     };
 }
 
@@ -313,9 +348,9 @@ function ProductEditor({ id, onClose, onSaved, onFail }) {
                             </button>
                         ))}
                     </div>
-                    <label className="form-label">{t('admin.product_name')}<input value={form[lang].name} onChange={(e) => change('name', e.target.value)} className="form-input" /></label>
-                    <label className="form-label">{t('admin.short_description')}<textarea rows={3} value={form[lang].short_description} onChange={(e) => change('short_description', e.target.value)} className="form-input resize-none" /></label>
-                    <label className="form-label">{t('admin.description')}<textarea rows={8} value={form[lang].description} onChange={(e) => change('description', e.target.value)} className="form-input resize-none" /></label>
+                    <label className="form-label">{t('admin.product_name')}<FieldBadge product={product} lang={lang} field="name" t={t} /><input value={form[lang].name} onChange={(e) => change('name', e.target.value)} className="form-input" /></label>
+                    <label className="form-label">{t('admin.short_description')}<FieldBadge product={product} lang={lang} field="short_description" t={t} /><textarea rows={3} value={form[lang].short_description} onChange={(e) => change('short_description', e.target.value)} className="form-input resize-none" /></label>
+                    <label className="form-label">{t('admin.description')}<FieldBadge product={product} lang={lang} field="description" t={t} /><textarea rows={8} value={form[lang].description} onChange={(e) => change('description', e.target.value)} className="form-input resize-none" /></label>
                     <div className="flex justify-end gap-3 border-t border-line pt-5">
                         <Button type="button" variant="ghost" onClick={close}>{t('admin.cancel')}</Button>
                         <Button disabled={saving}>{t('admin.save')}</Button>

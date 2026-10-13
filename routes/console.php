@@ -9,3 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('catalog:sync')->hourly();
+Schedule::command('catalog:translate --limit=60')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->when(fn () => (bool) config('translation.enabled'));

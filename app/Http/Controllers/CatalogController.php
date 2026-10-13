@@ -84,6 +84,8 @@ class CatalogController extends Controller
             $term = '%'.$request->query('q').'%';
             $query->where(function ($inner) use ($term) {
                 $inner->where('name_ka', 'like', $term)
+                    ->orWhere('name_en', 'like', $term)
+                    ->orWhere('name_ru', 'like', $term)
                     ->orWhere('product_code', 'like', $term)
                     ->orWhere('brand', 'like', $term);
             });
@@ -116,7 +118,7 @@ class CatalogController extends Controller
         match ($sort) {
             'priceAsc' => $query->orderBy('price')->orderBy('id'),
             'priceDesc' => $query->orderByDesc('price')->orderBy('id'),
-            'name' => $query->orderBy('name_ka')->orderBy('id'),
+            'name' => $query->orderByRaw($this->nameSort($language))->orderBy('id'),
             default => $query->orderByDesc('first_seen_at')->orderByDesc('id'),
         };
 
@@ -146,6 +148,15 @@ class CatalogController extends Controller
         $item['images'] = array_values($product->images ?? []);
 
         return response()->json($item);
+    }
+
+    private function nameSort(string $language): string
+    {
+        return match ($language) {
+            'en' => 'COALESCE(name_en, name_ka)',
+            'ru' => 'COALESCE(name_ru, name_ka)',
+            default => 'name_ka',
+        };
     }
 
     private function language(Request $request): string

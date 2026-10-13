@@ -82,7 +82,17 @@ class AdminCategoryController extends Controller
                     continue;
                 }
                 if (array_key_exists('name', $data['translations'][$language])) {
-                    $current[$language]['name'] = $data['translations'][$language]['name'];
+                    $value = $data['translations'][$language]['name'];
+                    $current[$language]['name'] = $value;
+                    $manual = $current[$language]['_manual'] ?? [];
+                    if (! is_array($manual)) {
+                        $manual = [];
+                    }
+                    $manual = array_values(array_filter($manual, fn ($field) => $field !== 'name'));
+                    if (is_string($value) && trim($value) !== '') {
+                        $manual[] = 'name';
+                    }
+                    $current[$language]['_manual'] = array_values(array_unique($manual));
                 }
             }
             $category->translations = $current;

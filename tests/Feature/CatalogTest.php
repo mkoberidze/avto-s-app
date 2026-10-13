@@ -60,6 +60,7 @@ class CatalogTest extends TestCase
 
         Product::query()->whereKey(101)->update([
             'translations' => ['en' => ['name' => 'Keep me']],
+            'name_en' => 'Keep me',
             'is_hidden' => true,
             'is_featured' => true,
         ]);
@@ -69,6 +70,7 @@ class CatalogTest extends TestCase
 
         $product = Product::query()->find(101);
         $this->assertSame(['en' => ['name' => 'Keep me']], $product->translations);
+        $this->assertSame('Keep me', $product->name_en);
         $this->assertTrue($product->is_hidden);
         $this->assertTrue($product->is_featured);
         $this->assertSame(99, Category::query()->find(32)->nav_order);
@@ -300,12 +302,16 @@ class CatalogTest extends TestCase
         $this->artisan('catalog:sync')->assertSuccessful();
 
         Product::query()->whereKey(101)->update([
+            'name_en' => 'English camera',
             'translations' => [
                 'en' => [
                     'name' => 'English camera',
+                    'short_description' => 'English short',
                     'description' => '<p>Hello EN</p><script>alert(1)</script>',
+                    'features' => ['Resolution' => '4MP'],
                 ],
             ],
+            'features' => ['რეზოლუცია' => '4MP'],
         ]);
 
         $en = $this->getJson('/api/products/101?language=en')->json();
@@ -313,12 +319,21 @@ class CatalogTest extends TestCase
         $this->assertStringContainsString('<p>Hello EN</p>', $en['description']);
         $this->assertStringNotContainsString('<script', $en['description']);
 
+        $this->assertSame('English camera', $this->getJson('/api/products?q=English%20camera&language=en')->json('products.0.name'));
         $this->assertSame('English camera', $this->getJson('/api/products?q=CAM-101&language=en')->json('products.0.name'));
+        $this->assertSame('English short', $this->getJson('/api/products?language=en&q=CAM-101')->json('products.0.short_description'));
+        $this->assertSame(['Resolution' => '4MP'], $this->getJson('/api/products/101?language=en')->json('features'));
 
         $ru = $this->getJson('/api/products/101?language=ru')->json();
         $this->assertSame('IP camera A', $ru['name']);
         $ka = $this->getJson('/api/products/101?language=ka')->json();
         $this->assertSame('IP camera A', $ka['name']);
+
+        Product::query()->whereKey(102)->update(['name_en' => 'AAA english']);
+        Product::query()->whereKey(103)->update(['name_en' => 'ZZZ english']);
+        $sorted = $this->getJson('/api/products?sort=name&language=en&per_page=60')->json('products');
+        $ids = collect($sorted)->pluck('id')->all();
+        $this->assertTrue(array_search('102', $ids) < array_search('103', $ids));
     }
 
     private function fakeFeed(): void
