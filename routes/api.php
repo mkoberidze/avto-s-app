@@ -11,6 +11,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\AdminOrderController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/otp/request', [AuthController::class, 'requestOtp']);
@@ -65,5 +66,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::put('/products/{id}', [AdminProductController::class, 'update'])->whereNumber('id');
     Route::get('/categories', [AdminCategoryController::class, 'index']);
     Route::put('/categories/{id}', [AdminCategoryController::class, 'update'])->whereNumber('id');
+    Route::get('/dashboard', [AdminOrderController::class, 'dashboard']);
+    Route::get('/orders', [AdminOrderController::class, 'index']);
+    Route::get('/orders/{id}', [AdminOrderController::class, 'show'])->whereNumber('id');
+    Route::patch('/orders/{id}', [AdminOrderController::class, 'update'])->whereNumber('id');
 });
 

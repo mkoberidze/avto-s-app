@@ -6,7 +6,7 @@ export default function AdminPage() {
     const { section } = useParams();
     const match = findAdminSection(section);
     if (!match) {
-        return <Navigate to="/admin/products" replace />;
+        return <Navigate to="/admin/dashboard" replace />;
     }
     const Component = match.Component;
     return <Component />;

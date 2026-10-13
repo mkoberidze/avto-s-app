@@ -40,6 +40,22 @@ export function uploadFavicon(file) {
     return axios.post('/api/admin/settings/upload-favicon', data).then((res) => res.data);
 }
 
+export function getAdminDashboard() {
+    return axios.get('/api/admin/dashboard').then((res) => res.data);
+}
+
+export function getAdminOrders(params = {}) {
+    return axios.get('/api/admin/orders', { params }).then((res) => res.data);
+}
+
+export function getAdminOrder(id) {
+    return axios.get(`/api/admin/orders/${id}`).then((res) => res.data);
+}
+
+export function updateAdminOrder(id, payload) {
+    return axios.patch(`/api/admin/orders/${id}`, payload).then((res) => res.data);
+}
+
 export function uploadCarousel(file, index) {
     const data = new FormData();
     data.append('carousel_image', file);

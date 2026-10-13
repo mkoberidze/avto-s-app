@@ -187,7 +187,7 @@ class OrderController extends Controller
             'id' => $order->id,
             'number' => $order->number,
             'status' => $order->status,
-            'total' => (string) $order->total,
+            'total' => Order::money($order->total),
             'item_count' => (int) ($order->items_count ?? $order->items()->count()),
             'created_at' => $order->created_at?->toISOString(),
         ];

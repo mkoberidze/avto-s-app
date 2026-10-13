@@ -7,6 +7,7 @@ use Ichtrojan\Otp\Models\Otp as OtpModel;
 use Ichtrojan\Otp\Otp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
@@ -189,5 +190,39 @@ class AuthOtpTest extends TestCase
             ->assertJsonPath('user.name', 'Nika')
             ->assertJsonPath('user.phone', $user->phone)
             ->assertJsonStructure(['status', 'user' => ['id', 'phone', 'name', 'role']]);
+    }
+
+    public function test_sms_log_driver_writes_log_and_skips_network(): void
+    {
+        config(['services.sms_driver' => 'log']);
+        Http::fake();
+        $captured = [];
+        Log::listen(function ($event) use (&$captured) {
+            $captured[] = $event;
+        });
+
+        $phone = '+995555111010';
+        $this->postJson('/api/auth/otp/request', ['phone' => $phone])
+            ->assertOk()
+            ->assertExactJson(['status' => 'ok', 'expires_in' => 600]);
+
+        Http::assertNothingSent();
+        $sms = collect($captured)->first(fn ($event) => $event->message === 'SMS');
+        $this->assertNotNull($sms);
+        $this->assertSame('info', $sms->level);
+        $this->assertSame($phone, $sms->context['phone']);
+        $this->assertNotEmpty($sms->context['message']);
+        $this->assertTrue(OtpModel::query()->where('identifier', $phone)->where('valid', true)->exists());
+    }
+
+    public function test_sms_ubill_driver_calls_network(): void
+    {
+        config(['services.sms_driver' => 'ubill']);
+        Http::fake(['https://api.ubill.dev/*' => Http::response('ok', 200)]);
+
+        $phone = '+995555111011';
+        $this->postJson('/api/auth/otp/request', ['phone' => $phone])->assertOk();
+
+        Http::assertSent(fn ($request) => str_starts_with($request->url(), 'https://api.ubill.dev/'));
     }
 }

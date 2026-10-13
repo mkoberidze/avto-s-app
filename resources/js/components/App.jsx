@@ -22,6 +22,7 @@ import FormDetailsPage from './pages/FormDetailsPage.jsx';
 import ServicesPage from './pages/ServicesPage.jsx';
 import AdminLayout from './admin/AdminLayout.jsx';
 import AdminPage from './admin/AdminPage.jsx';
+import OrderDetailSection from './admin/OrderDetailSection.jsx';
 
 function AppShell() {
     return (
@@ -33,7 +34,8 @@ function AppShell() {
                     <Route path="/forms/:id" element={<ProtectedRoute><FormDetailsPage /></ProtectedRoute>} />
                 </Route>
                 <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<Navigate to="products" replace />} />
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="orders/:id" element={<OrderDetailSection />} />
                     <Route path=":section" element={<AdminPage />} />
                 </Route>
                 <Route element={<StorefrontLayout />}>

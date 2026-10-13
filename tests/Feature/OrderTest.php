@@ -65,7 +65,8 @@ class OrderTest extends TestCase
             ],
         ])->assertCreated();
 
-        $this->assertSame('200.00', $res->json('total'));
+        $this->assertEquals(200, $res->json('total'));
+        $this->assertTrue(is_int($res->json('total')) || is_float($res->json('total')));
         $this->assertSame('SO-00001', $res->json('number'));
         $item = Order::query()->first()->items()->first();
         $this->assertSame('100.00', (string) $item->price_snapshot);
@@ -115,7 +116,7 @@ class OrderTest extends TestCase
         ])->assertCreated();
 
         $this->assertSame(1, $res->json('item_count'));
-        $this->assertSame('500.00', $res->json('total'));
+        $this->assertEquals(500, $res->json('total'));
         $this->assertSame(5, Order::query()->first()->items()->first()->quantity);
     }
 
@@ -157,7 +158,7 @@ class OrderTest extends TestCase
 
         $this->assertSame($first->json('id'), $second->json('id'));
         $this->assertSame(1, Order::query()->count());
-        $this->assertSame('100.00', $second->json('total'));
+        $this->assertEquals(100, $second->json('total'));
     }
 
     public function test_another_users_order_is_404(): void

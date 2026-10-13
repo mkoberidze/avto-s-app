@@ -12,7 +12,7 @@ export default function AdminLayout() {
     const { isAuthenticated, user, loading } = useAuth();
     const location = useLocation();
     const [sidebar, setSidebar] = useState(false);
-    const sectionId = location.pathname.split('/')[2] || 'products';
+    const sectionId = location.pathname.split('/')[2] || 'dashboard';
     const active = findAdminSection(sectionId);
 
     if (loading) {
@@ -36,7 +36,7 @@ export default function AdminLayout() {
             {sidebar ? <button type="button" onClick={() => setSidebar(false)} aria-label={t('common.close')} className="fixed inset-0 z-40 bg-navy/50 lg:hidden" /> : null}
             <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-navy text-white transition-transform lg:translate-x-0 ${sidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-                    <Link to="/admin/products" onClick={() => setSidebar(false)} className="flex items-center gap-3">
+                    <Link to="/admin/dashboard" onClick={() => setSidebar(false)} className="flex items-center gap-3">
                         <span className="grid size-10 place-items-center rounded-xl bg-accent"><ShieldCheck size={22} /></span>
                         <span>
                             <strong className="block tracking-widest">SENTRA</strong>
@@ -75,7 +75,7 @@ export default function AdminLayout() {
                         </button>
                         <div>
                             <p className="text-xs text-muted">{t('admin.panel')}</p>
-                            <p className="font-bold text-navy">{t(active?.label || 'admin.products')}</p>
+                            <p className="font-bold text-navy">{t(active?.label || 'admin.dashboard')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">

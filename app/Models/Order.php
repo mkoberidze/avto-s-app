@@ -18,6 +18,11 @@ class Order extends Model
         ];
     }
 
+    public static function money(mixed $value): float
+    {
+        return round((float) $value, 2);
+    }
+
     protected function number(): Attribute
     {
         return Attribute::get(fn () => 'SO-'.str_pad((string) $this->id, 5, '0', STR_PAD_LEFT));

@@ -10,10 +10,20 @@ class UbillSms
 {
     public function send(string $phone, string $message): bool
     {
+        $normalized = $this->normalizePhone($phone);
+
+        if (config('services.sms_driver', 'ubill') === 'log') {
+            Log::info('SMS', [
+                'phone' => $normalized,
+                'message' => $message,
+            ]);
+
+            return true;
+        }
+
         try {
             $apiKey = config('services.ubill.api_key');
             $brandId = config('services.ubill.brand_id');
-            $normalized = $this->normalizePhone($phone);
             $phoneForApi = str_replace('+', '', $normalized);
             $encodedMessage = urlencode($message);
             $url = "https://api.ubill.dev/v1/sms/send?key={$apiKey}&brandID={$brandId}&numbers={$phoneForApi}&text={$encodedMessage}&stopList=false";
@@ -30,6 +40,10 @@ class UbillSms
 
     public function sendIfConfigured(string $phone, string $message): bool
     {
+        if (config('services.sms_driver', 'ubill') === 'log') {
+            return $this->send($phone, $message);
+        }
+
         if (! config('services.ubill.api_key') || ! config('services.ubill.brand_id')) {
             Log::warning('SMS not sent: UBILL_API_KEY or UBILL_BRAND_ID not configured');
 
