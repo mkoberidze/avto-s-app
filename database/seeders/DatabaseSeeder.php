@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Support\GeorgianPhone;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -19,18 +20,23 @@ class DatabaseSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
 
-        // Create admin user from config
-        $adminPhone = config('admin.phone');
+        $adminPhone = GeorgianPhone::normalize((string) config('admin.phone'));
         $adminPassword = config('admin.password');
 
-        $admin = User::query()->firstOrCreate(
-            ['phone' => $adminPhone],
-            [
+        $matches = User::query()->whereIn('phone', GeorgianPhone::variants($adminPhone))->get();
+        $admin = $matches->first(fn (User $user) => $user->hasRole('admin')) ?? $matches->first();
+
+        if (! $admin) {
+            $admin = User::query()->create([
+                'phone' => $adminPhone,
                 'name' => 'Administrator',
                 'email' => $adminPhone.'@example.local',
                 'password' => Hash::make($adminPassword),
-            ]
-        );
+            ]);
+        } elseif ($admin->phone !== $adminPhone) {
+            $admin->phone = $adminPhone;
+            $admin->save();
+        }
         if (! $admin->hasRole('admin')) {
             $admin->assignRole($adminRole);
         }

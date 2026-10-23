@@ -21,4 +21,22 @@ class GeorgianPhone
     {
         return (bool) preg_match('/^\+9955\d{8}$/', self::normalize($raw));
     }
+
+    /**
+     * @return list<string>
+     */
+    public static function variants(string $raw): array
+    {
+        $normalized = self::normalize($raw);
+        $digits = preg_replace('/\D+/', '', $normalized) ?? '';
+        $local = str_starts_with($digits, '995') ? substr($digits, 3) : $digits;
+
+        return array_values(array_unique(array_filter([
+            $normalized,
+            $digits,
+            $local,
+            $local !== '' ? '995'.$local : '',
+            $local !== '' ? '+995'.$local : '',
+        ])));
+    }
 }

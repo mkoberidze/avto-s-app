@@ -10,7 +10,7 @@ class UbillSms
 {
     public function send(string $phone, string $message): bool
     {
-        $normalized = $this->normalizePhone($phone);
+        $normalized = GeorgianPhone::normalize($phone);
 
         if (config('services.sms_driver', 'ubill') === 'log') {
             Log::info('SMS', [
@@ -62,13 +62,4 @@ class UbillSms
         }
     }
 
-    private function normalizePhone(string $raw): string
-    {
-        $raw = trim($raw);
-        if (str_starts_with($raw, '+')) {
-            return '+'.preg_replace('/\D+/', '', substr($raw, 1));
-        }
-
-        return preg_replace('/\D+/', '', $raw);
-    }
 }

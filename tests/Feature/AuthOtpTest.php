@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Ichtrojan\Otp\Models\Otp as OtpModel;
 use Ichtrojan\Otp\Otp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -213,6 +214,71 @@ class AuthOtpTest extends TestCase
         $this->assertSame($phone, $sms->context['phone']);
         $this->assertNotEmpty($sms->context['message']);
         $this->assertTrue(OtpModel::query()->where('identifier', $phone)->where('valid', true)->exists());
+    }
+
+    public function test_admin_env_otp_logs_in_without_generated_code(): void
+    {
+        config([
+            'admin.phone' => '995555000020',
+            'admin.otp' => '654321',
+        ]);
+
+        $admin = User::factory()->create(['phone' => '995555000020', 'name' => 'Administrator']);
+        $admin->assignRole('admin');
+
+        $this->postJson('/api/auth/otp/verify', [
+            'phone' => '+995555000020',
+            'otp' => '654321',
+        ])->assertOk()->assertJsonPath('user.role', 'admin')->assertJsonPath('user.phone', '+995555000020');
+    }
+
+    public function test_admin_env_otp_does_not_work_for_other_phones_or_when_unset(): void
+    {
+        config([
+            'admin.phone' => '+995555000021',
+            'admin.otp' => '654321',
+        ]);
+
+        $this->postJson('/api/auth/otp/verify', [
+            'phone' => '+995555000022',
+            'otp' => '654321',
+        ])->assertStatus(422);
+
+        config([
+            'admin.phone' => '+995555000021',
+            'admin.otp' => '',
+        ]);
+
+        $this->postJson('/api/auth/otp/verify', [
+            'phone' => '+995555000021',
+            'otp' => '654321',
+        ])->assertStatus(422);
+    }
+
+    public function test_otp_login_finds_admin_when_stored_phone_lacks_plus(): void
+    {
+        $admin = User::factory()->create(['phone' => '995555000023']);
+        $admin->assignRole('admin');
+        $otp = (new Otp())->generate('+995555000023', 'numeric', 6, 10);
+
+        $this->postJson('/api/auth/otp/verify', [
+            'phone' => '+995555000023',
+            'otp' => $otp->token,
+        ])->assertOk()->assertJsonPath('user.role', 'admin');
+    }
+
+    public function test_seeder_stores_normalized_admin_phone(): void
+    {
+        config([
+            'admin.phone' => '995555000024',
+            'admin.password' => 'secret',
+        ]);
+
+        $this->seed(DatabaseSeeder::class);
+
+        $admin = User::query()->where('phone', '+995555000024')->first();
+        $this->assertNotNull($admin);
+        $this->assertTrue($admin->hasRole('admin'));
     }
 
     public function test_sms_ubill_driver_calls_network(): void

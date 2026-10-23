@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\GeorgianPhone;
 use App\Support\UbillSms;
 use Ichtrojan\Otp\Models\Otp as OtpModel;
 use Ichtrojan\Otp\Otp;
@@ -17,12 +18,44 @@ class AuthController extends Controller
 
     private function normalizePhone(string $raw): string
     {
-        $raw = trim($raw);
-        if (str_starts_with($raw, '+')) {
-            return '+'.preg_replace('/\D+/', '', substr($raw, 1));
+        return GeorgianPhone::normalize($raw);
+    }
+
+    private function isAdminPhone(string $phone): bool
+    {
+        $adminPhone = GeorgianPhone::normalize((string) config('admin.phone'));
+
+        return $adminPhone !== '' && hash_equals($adminPhone, $phone);
+    }
+
+    private function matchesAdminOtp(string $phone, string $code): bool
+    {
+        $adminOtp = preg_replace('/\D+/', '', (string) config('admin.otp')) ?? '';
+
+        return $adminOtp !== ''
+            && $this->isAdminPhone($phone)
+            && hash_equals($adminOtp, $code);
+    }
+
+    private function findOrCreateUser(string $phone): User
+    {
+        $matches = User::query()->whereIn('phone', GeorgianPhone::variants($phone))->get();
+        $user = $matches->first(fn (User $candidate) => $candidate->hasRole('admin'))
+            ?? $matches->first();
+
+        if (! $user) {
+            $user = User::query()->create([
+                'phone' => $phone,
+                'name' => null,
+                'email' => $phone.'@example.local',
+                'password' => bcrypt(str()->random(32)),
+            ]);
+        } elseif ($user->phone !== $phone) {
+            $user->phone = $phone;
+            $user->save();
         }
 
-        return preg_replace('/\D+/', '', $raw);
+        return $user;
     }
 
     private function normalizeOtp(string $raw): string
@@ -107,7 +140,9 @@ class AuthController extends Controller
         }
 
         $otp = new Otp();
-        $verification = $otp->validate($phone, $code);
+        $verification = $this->matchesAdminOtp($phone, $code)
+            ? (object) ['status' => true]
+            : $otp->validate($phone, $code);
 
         if (! $verification->status) {
             RateLimiter::hit($verifyKey, 600);
@@ -120,18 +155,13 @@ class AuthController extends Controller
 
         RateLimiter::clear($verifyKey);
 
-        $user = User::query()->firstOrCreate(
-            ['phone' => $phone],
-            [
-                'name' => null,
-                'email' => $phone.'@example.local',
-                'password' => bcrypt(str()->random(32)),
-            ]
-        );
+        $user = $this->findOrCreateUser($phone);
 
-        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
-        if (! $user->hasRole('admin') && ! $user->hasRole('user')) {
+        if ($this->isAdminPhone($phone) && ! $user->hasRole('admin')) {
+            $user->assignRole($adminRole);
+        } elseif (! $user->hasRole('admin') && ! $user->hasRole('user')) {
             $user->assignRole($userRole);
         }
 

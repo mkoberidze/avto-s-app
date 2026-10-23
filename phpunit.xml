@@ -30,5 +30,6 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="SMS_DRIVER" value="ubill"/>
+        <env name="ADMIN_OTP" value=""/>
     </php>
 </phpunit>
