@@ -49,8 +49,13 @@ class User extends Authenticatable
         ];
     }
 
-    public function forms()
+    public function orders()
     {
-        return $this->hasMany(Form::class);
+        return $this->hasMany(Order::class);
+    }
+
+    public function clientRole(): string
+    {
+        return $this->hasRole('admin') ? 'admin' : 'user';
     }
 }

@@ -1,12 +1,10 @@
-name: Deploy to ProService
+name: Build release package
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,7 +15,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, bcmath, pdo_mysql
+          extensions: mbstring, bcmath, pdo_mysql, curl, dom, fileinfo, xml
           coverage: none
 
       - name: Install Composer dependencies
@@ -35,45 +33,40 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Prepare deployment
+      - name: Prepare release folders
         run: |
           mkdir -p deploy/laravel
           mkdir -p deploy/public_html
 
           rsync -a \
             --exclude='.git/' \
+            --exclude='.github/' \
             --exclude='.env' \
             --exclude='node_modules/' \
+            --exclude='tests/' \
+            --exclude='docker-compose.yml' \
             --exclude='public/build/' \
             --exclude='public/hot' \
             --exclude='storage/logs/' \
             --exclude='storage/framework/cache/' \
             --exclude='storage/framework/sessions/' \
             --exclude='storage/framework/views/' \
+            --exclude='deploy/' \
             ./ deploy/laravel/
 
           cp -a public/. deploy/public_html/
 
-      - name: Deploy Laravel
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: ./deploy/laravel/
-          server-dir: ./laravel/
-          dangerous-clean-slate: false
+      - name: Create zip files
+        run: |
+          (cd deploy/laravel && zip -rq ../../laravel.zip .)
+          (cd deploy/public_html && zip -rq ../../public_html.zip .)
+          ls -lh laravel.zip public_html.zip
 
-      - name: Deploy public files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: ./deploy/public_html/
-          server-dir: ./sentra.ge/public_html/
-          dangerous-clean-slate: false
+          name: sentra-release
+          path: |
+            laravel.zip
+            public_html.zip
+          retention-days: 7

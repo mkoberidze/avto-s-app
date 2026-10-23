@@ -34,6 +34,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'sms_driver' => env('SMS_DRIVER', 'ubill'),
+
     'ubill' => [
         'api_key' => env('UBILL_API_KEY'),
         'brand_id' => env('UBILL_BRAND_ID'),

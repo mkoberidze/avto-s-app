@@ -4,17 +4,8 @@ import axios from 'axios';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-    const [phoneModalOpen, setPhoneModalOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    function openPhoneModal() {
-        setPhoneModalOpen(true);
-    }
-
-    function closePhoneModal() {
-        setPhoneModalOpen(false);
-    }
 
     async function requestOtp(phoneNumber) {
         if (!phoneNumber || phoneNumber.length < 6) {
@@ -34,7 +25,13 @@ export function AuthProvider({ children }) {
             } catch {}
         }
         setUser(userPayload ? enhanceUser(userPayload) : null);
-        setPhoneModalOpen(false);
+        return userPayload;
+    }
+
+    async function updateProfile(name) {
+        const res = await axios.patch('/api/user', { name });
+        const userPayload = res.data.user || res.data;
+        setUser(enhanceUser(userPayload));
         return userPayload;
     }
 
@@ -46,7 +43,6 @@ export function AuthProvider({ children }) {
         delete axios.defaults.headers.common['Authorization'];
     }
 
-    // Restore session from localStorage on mount
     useEffect(() => {
         const checkAuth = async () => {
             try {
@@ -69,7 +65,7 @@ export function AuthProvider({ children }) {
                 setLoading(false);
             }
         };
-        
+
         checkAuth();
     }, []);
 
@@ -87,14 +83,12 @@ export function AuthProvider({ children }) {
             isAuthenticated: Boolean(user),
             user,
             loading,
-            phoneModalOpen,
-            openPhoneModal,
-            closePhoneModal,
             requestOtp,
             verifyOtp,
+            updateProfile,
             signOut,
         }),
-        [user, loading, phoneModalOpen]
+        [user, loading]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

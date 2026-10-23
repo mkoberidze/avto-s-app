@@ -3,20 +3,59 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Support\GeorgianPhone;
+use App\Support\UbillSms;
+use Ichtrojan\Otp\Models\Otp as OtpModel;
 use Ichtrojan\Otp\Otp;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
+    private const OTP_EXPIRES_IN = 600;
+
     private function normalizePhone(string $raw): string
     {
-        $raw = trim($raw);
-        if (str_starts_with($raw, '+')) {
-            return '+'.preg_replace('/\D+/', '', substr($raw, 1));
+        return GeorgianPhone::normalize($raw);
+    }
+
+    private function isAdminPhone(string $phone): bool
+    {
+        $adminPhone = GeorgianPhone::normalize((string) config('admin.phone'));
+
+        return $adminPhone !== '' && hash_equals($adminPhone, $phone);
+    }
+
+    private function matchesAdminOtp(string $phone, string $code): bool
+    {
+        $adminOtp = preg_replace('/\D+/', '', (string) config('admin.otp')) ?? '';
+
+        return $adminOtp !== ''
+            && $this->isAdminPhone($phone)
+            && hash_equals($adminOtp, $code);
+    }
+
+    private function findOrCreateUser(string $phone): User
+    {
+        $matches = User::query()->whereIn('phone', GeorgianPhone::variants($phone))->get();
+        $user = $matches->first(fn (User $candidate) => $candidate->hasRole('admin'))
+            ?? $matches->first();
+
+        if (! $user) {
+            $user = User::query()->create([
+                'phone' => $phone,
+                'name' => null,
+                'email' => $phone.'@example.local',
+                'password' => bcrypt(str()->random(32)),
+            ]);
+        } elseif ($user->phone !== $phone) {
+            $user->phone = $phone;
+            $user->save();
         }
-        return preg_replace('/\D+/', '', $raw);
+
+        return $user;
     }
 
     private function normalizeOtp(string $raw): string
@@ -24,40 +63,64 @@ class AuthController extends Controller
         return preg_replace('/\D+/', '', trim($raw));
     }
 
-    public function requestOtp(Request $request)
+    private function userPayload(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'phone' => $user->phone,
+            'name' => $user->name,
+            'role' => $user->clientRole(),
+        ];
+    }
+
+    private function retryAfterResponse(int $seconds): JsonResponse
+    {
+        return response()->json([
+            'message' => 'too_many_attempts',
+            'retry_after' => $seconds,
+        ], 429)->header('Retry-After', (string) $seconds);
+    }
+
+    public function requestOtp(Request $request, UbillSms $sms)
     {
         $data = $request->validate([
             'phone' => ['required', 'string'],
         ]);
 
         $phone = $this->normalizePhone($data['phone']);
+        $minuteKey = 'otp-request-min:'.$phone;
+        $hourKey = 'otp-request-hour:'.$phone;
+        $ipKey = 'otp-request-ip:'.$request->ip();
 
-        $user = User::query()->firstOrCreate(
-            ['phone' => $phone],
-            [
-                'name' => null,
-                // Fallback email for schemas where email is non-nullable
-                'email' => $phone.'@example.local',
-                'password' => bcrypt(str()->random(32)),
-            ]
-        );
+        $wait = 0;
+        $blocked = false;
+        foreach ([$minuteKey => 1, $hourKey => 5, $ipKey => 20] as $key => $max) {
+            if (RateLimiter::tooManyAttempts($key, $max)) {
+                $blocked = true;
+                $wait = max($wait, RateLimiter::availableIn($key));
+            }
+        }
+        if ($blocked) {
+            return $this->retryAfterResponse($wait);
+        }
+
+        RateLimiter::hit($minuteKey, 60);
+        RateLimiter::hit($hourKey, 3600);
+        RateLimiter::hit($ipKey, 3600);
 
         $otp = new Otp();
         $otpCode = $otp->generate($phone, 'numeric', 6, 10);
 
-        $apiKey = config('services.ubill.api_key');
-        $brandId = config('services.ubill.brand_id');
-        $message = urlencode("{$otpCode->token}");
+        $sent = $sms->send($phone, (string) $otpCode->token);
+        if (! $sent) {
+            OtpModel::query()->where('identifier', $phone)->update(['valid' => false]);
 
-        $phone = str_replace('+', '', $phone);
-        $url = "https://api.ubill.dev/v1/sms/send?key={$apiKey}&brandID={$brandId}&numbers={$phone}&text={$message}&stopList=false";
-        $response = file_get_contents($url);
+            return response()->json(['message' => 'sms_failed'], 503);
+        }
 
         return response()->json([
             'status' => 'ok',
-            'message' => 'OTP generated. For testing, check the otps table.',
-            'user_exists' => (bool) $user->wasRecentlyCreated === false,
-            'response' => $response,
+            'expires_in' => self::OTP_EXPIRES_IN,
         ]);
     }
 
@@ -70,62 +133,75 @@ class AuthController extends Controller
 
         $phone = $this->normalizePhone($data['phone']);
         $code = $this->normalizeOtp($data['otp']);
+        $verifyKey = 'otp-verify:'.$phone;
+
+        if (RateLimiter::tooManyAttempts($verifyKey, 5)) {
+            return $this->retryAfterResponse(RateLimiter::availableIn($verifyKey));
+        }
 
         $otp = new Otp();
-        $verification = $otp->validate($phone, $code);
+        $verification = $this->matchesAdminOtp($phone, $code)
+            ? (object) ['status' => true]
+            : $otp->validate($phone, $code);
 
         if (! $verification->status) {
+            RateLimiter::hit($verifyKey, 600);
+
             return response()->json([
                 'status' => 'error',
                 'message' => $verification->message,
             ], 422);
         }
 
-        $user = User::query()->firstOrCreate(
-            ['phone' => $phone],
-            [
-                'name' => null,
-                // Fallback email for schemas where email is non-nullable
-                'email' => $phone.'@example.local',
-                'password' => bcrypt(str()->random(32)),
-            ]
-        );
+        RateLimiter::clear($verifyKey);
 
-        Auth::login($user);
+        $user = $this->findOrCreateUser($phone);
 
-        // Ensure base roles exist and assign default 'user' role on first auth
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
-        if (! $user->hasRole('user')) {
+        if ($this->isAdminPhone($phone) && ! $user->hasRole('admin')) {
+            $user->assignRole($adminRole);
+        } elseif (! $user->hasRole('admin') && ! $user->hasRole('user')) {
             $user->assignRole($userRole);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $minutes = (int) config('sanctum.expiration', 43200);
+        $expiresAt = $minutes > 0 ? now()->addMinutes($minutes) : null;
+        $token = $user->createToken('auth_token', ['*'], $expiresAt)->plainTextToken;
 
         return response()->json([
             'status' => 'ok',
             'message' => 'Authenticated',
             'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'phone' => $user->phone,
-                'name' => $user->name,
-                'role' => $user->getRoleNames()->first(),
-            ],
+            'user' => $this->userPayload($user),
         ]);
     }
 
     public function getUser(Request $request)
     {
+        return response()->json([
+            'status' => 'ok',
+            'user' => $this->userPayload($request->user()),
+        ]);
+    }
+
+    public function updateUser(Request $request)
+    {
+        $request->merge([
+            'name' => trim((string) $request->input('name', '')),
+        ]);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+        ]);
+
         $user = $request->user();
+        $user->name = $data['name'];
+        $user->save();
 
         return response()->json([
             'status' => 'ok',
-            'user' => [
-                'id' => $user->id,
-                'phone' => $user->phone,
-                'name' => $user->name,
-                'role' => $user->getRoleNames()->first(),
-            ],
+            'user' => $this->userPayload($user->fresh()),
         ]);
     }
 
@@ -139,5 +215,3 @@ class AuthController extends Controller
         ]);
     }
 }
-
-
