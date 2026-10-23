@@ -5,7 +5,6 @@ import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext.jsx';
 import { useCart } from '../../../contexts/CartContext.jsx';
 import { useI18n } from '../../../contexts/i18n.js';
-import { useLanguage } from '../../../contexts/LanguageContext.jsx';
 import { loginRedirect } from '../../../lib/safePath.js';
 import { Button, Price } from '../ui.jsx';
 
@@ -20,7 +19,6 @@ function clientToken() {
 
 export default function CheckoutPage() {
     const t = useI18n();
-    const { lang } = useLanguage();
     const { isAuthenticated, loading, user } = useAuth();
     const { items, total, removeItem, clear } = useCart();
     const tokenRef = useRef(clientToken());
@@ -109,7 +107,6 @@ export default function CheckoutPage() {
             body.append('customer_name', name.trim());
             body.append('address', address.trim());
             if (comment.trim()) body.append('comment', comment.trim());
-            body.append('language', lang);
             body.append('client_token', tokenRef.current);
             if (file) body.append('attachment', file);
             items.forEach((item, i) => {

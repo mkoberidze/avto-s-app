@@ -11,12 +11,12 @@ export function formatAdminDate(value) {
     if (!value) return '';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return value;
-    return d.toLocaleString();
+    return d.toLocaleString('ka-GE');
 }
 
 export function formatDay(value) {
     if (!value) return '';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return value;
-    return d.toLocaleDateString();
+    return d.toLocaleDateString('ka-GE');
 }

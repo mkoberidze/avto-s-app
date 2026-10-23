@@ -2,12 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import axios from 'axios';
-import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import { useI18n } from '../../contexts/i18n.js';
 
 export default function Navbar() {
     const { isAuthenticated, user, openPhoneModal, signOut } = useAuth();
-    const { lang, setLang, toggleLang } = useLanguage();
     const t = useI18n();
     const [logoUrl, setLogoUrl] = useState('');
     const [faviconUrl, setFaviconUrl] = useState('');
@@ -96,36 +94,6 @@ export default function Navbar() {
                 </nav>
 
                 <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <button
-                            className="inline-flex h-8 w-12 items-center justify-center rounded-md border border-black/10 bg-white hover:bg-gray-50 transition"
-                            onClick={toggleLang}
-                            title={lang === 'ka' ? 'Switch to English' : 'გადადი ქართულზე'}
-                            aria-label={lang === 'ka' ? 'KA' : 'EN'}
-                        >
-                            {lang === 'ka' ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" className="h-5 w-7" aria-hidden="true">
-                                    <path fill="#fff" d="M0 0h640v480H0z"/>
-                                    <g fill="#e8102a">
-                                        <path d="M256 0h128v480H256zM0 176h640v128H0z"/>
-                                        <path d="M180 142v-40h-40v40h-40v40h40v40h40v-40h40v-40z"/>
-                                        <path d="M500 142v-40h-40v40h-40v40h40v40h40v-40h40v-40z"/>
-                                        <path d="M180 338v-40h-40v40h-40v40h40v40h40v-40h40v-40z"/>
-                                        <path d="M500 338v-40h-40v40h-40v40h40v40h40v-40h40v-40z"/>
-                                    </g>
-                                </svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" className="h-5 w-7" aria-hidden="true">
-                                    <clipPath id="s"><path d="M0 0v30h60V0z"/></clipPath>
-                                    <path d="M0 0v30h60V0z" fill="#012169"/>
-                                    <path d="M0 0l60 30m0-30L0 30" stroke="#fff" strokeWidth="6"/>
-                                    <path d="M0 0l60 30m0-30L0 30" clipPath="url(#s)" stroke="#C8102E" strokeWidth="4"/>
-                                    <path d="M30 0v30M0 15h60" stroke="#fff" strokeWidth="10"/>
-                                    <path d="M30 0v30M0 15h60" stroke="#C8102E" strokeWidth="6"/>
-                                </svg>
-                            )}
-                        </button>
-                    </div>
                     {isAuthenticated ? (
                         <div className="flex items-center gap-3">
                             <Link to="/forms" className="hidden sm:inline text-sm text-[#64748B] hover:text-[#0B1220] transition" title="Go to your forms">

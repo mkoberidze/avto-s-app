@@ -25,9 +25,7 @@ class AdminProductController extends Controller
             $query->where(function ($inner) use ($term) {
                 $inner->where('name_ka', 'like', $term)
                     ->orWhere('product_code', 'like', $term)
-                    ->orWhere('brand', 'like', $term)
-                    ->orWhere('translations->en->name', 'like', $term)
-                    ->orWhere('translations->ru->name', 'like', $term);
+                    ->orWhere('brand', 'like', $term);
             });
         }
 
@@ -82,10 +80,10 @@ class AdminProductController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $extra = array_values(array_diff(array_keys($request->all()), ['is_hidden', 'is_featured', 'translations']));
+        $extra = array_values(array_diff(array_keys($request->all()), ['is_hidden', 'is_featured']));
         if ($extra !== []) {
             return response()->json([
-                'message' => 'Only is_hidden, is_featured and translations can be updated.',
+                'message' => 'Only is_hidden and is_featured can be updated.',
                 'fields' => $extra,
             ], 422);
         }
@@ -93,15 +91,6 @@ class AdminProductController extends Controller
         $data = $request->validate([
             'is_hidden' => ['sometimes', 'boolean'],
             'is_featured' => ['sometimes', 'boolean'],
-            'translations' => ['sometimes', 'array'],
-            'translations.en' => ['sometimes', 'array'],
-            'translations.ru' => ['sometimes', 'array'],
-            'translations.en.name' => ['sometimes', 'nullable', 'string', 'max:500'],
-            'translations.en.short_description' => ['sometimes', 'nullable', 'string', 'max:20000'],
-            'translations.en.description' => ['sometimes', 'nullable', 'string', 'max:100000'],
-            'translations.ru.name' => ['sometimes', 'nullable', 'string', 'max:500'],
-            'translations.ru.short_description' => ['sometimes', 'nullable', 'string', 'max:20000'],
-            'translations.ru.description' => ['sometimes', 'nullable', 'string', 'max:100000'],
         ]);
 
         if (array_key_exists('is_hidden', $data)) {
@@ -110,29 +99,10 @@ class AdminProductController extends Controller
         if (array_key_exists('is_featured', $data)) {
             $product->is_featured = $data['is_featured'];
         }
-        if (array_key_exists('translations', $data)) {
-            $product->translations = $this->mergeTranslations($product->translations ?? [], $data['translations']);
-        }
 
         $product->save();
 
         return response()->json($this->detail($product->fresh()));
-    }
-
-    private function mergeTranslations(array $current, array $incoming): array
-    {
-        foreach (['en', 'ru'] as $language) {
-            if (! isset($incoming[$language]) || ! is_array($incoming[$language])) {
-                continue;
-            }
-            foreach (['name', 'short_description', 'description'] as $key) {
-                if (array_key_exists($key, $incoming[$language])) {
-                    $current[$language][$key] = $incoming[$language][$key];
-                }
-            }
-        }
-
-        return $current;
     }
 
     private function listItem(Product $product): array
@@ -152,8 +122,6 @@ class AdminProductController extends Controller
             'is_hidden' => (bool) $product->is_hidden,
             'is_featured' => (bool) $product->is_featured,
             'image' => $images[0] ?? null,
-            'has_en' => $this->hasName($product->translations, 'en'),
-            'has_ru' => $this->hasName($product->translations, 'ru'),
         ];
     }
 
@@ -164,14 +132,6 @@ class AdminProductController extends Controller
             'description_ka' => $product->description_ka,
             'features' => (object) (is_array($product->features) ? $product->features : []),
             'images' => array_values($product->images ?? []),
-            'translations' => (object) ($product->translations ?? []),
         ]);
-    }
-
-    private function hasName(?array $translations, string $language): bool
-    {
-        $name = data_get($translations, "{$language}.name");
-
-        return is_string($name) && trim($name) !== '';
     }
 }

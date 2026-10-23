@@ -12,8 +12,6 @@ class CatalogController extends Controller
 {
     public function categories(Request $request): JsonResponse
     {
-        $language = $this->language($request);
-
         $directCounts = Product::query()
             ->visible()
             ->selectRaw('category_id, count(*) as aggregate')
@@ -29,7 +27,7 @@ class CatalogController extends Controller
             ->orderBy('name_ka')
             ->get();
 
-        $payload = $categories->map(function (Category $category) use ($language, $directCounts, $descendantMap) {
+        $payload = $categories->map(function (Category $category) use ($directCounts, $descendantMap) {
             $total = 0;
             foreach ($descendantMap[(int) $category->id] ?? [(int) $category->id] as $id) {
                 $total += (int) $directCounts->get($id, 0);
@@ -38,7 +36,7 @@ class CatalogController extends Controller
             return [
                 'id' => (string) $category->id,
                 'parent_id' => $category->parent_id === null ? null : (string) $category->parent_id,
-                'name' => $category->localizedName($language),
+                'name' => $category->name_ka,
                 'nav_order' => $category->nav_order,
                 'product_count' => $total,
             ];
@@ -69,7 +67,6 @@ class CatalogController extends Controller
 
     public function products(Request $request): JsonResponse
     {
-        $language = $this->language($request);
         $page = max(1, (int) $request->query('page', 1));
         $perPage = min(60, max(1, (int) $request->query('per_page', 24)));
 
@@ -124,7 +121,7 @@ class CatalogController extends Controller
         $products = $query->forPage($page, $perPage)->get();
 
         return response()->json([
-            'products' => $products->map(fn (Product $product) => $this->listItem($product, $language))->values(),
+            'products' => $products->map(fn (Product $product) => $this->listItem($product))->values(),
             'total' => $total,
             'page' => $page,
             'per_page' => $perPage,
@@ -133,29 +130,21 @@ class CatalogController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $language = $this->language($request);
         $product = Product::query()->visible()->find($id);
         if (! $product) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $item = $this->listItem($product, $language, allImages: true);
-        $description = $product->localized('description', $language) ?? '';
+        $item = $this->listItem($product, allImages: true);
+        $description = (string) ($product->description_ka ?? '');
         $item['description'] = $description === '' ? '' : (string) Purifier::clean($description);
-        $item['features'] = (object) $product->localizedFeatures($language);
+        $item['features'] = (object) (is_array($product->features) ? $product->features : []);
         $item['images'] = array_values($product->images ?? []);
 
         return response()->json($item);
     }
 
-    private function language(Request $request): string
-    {
-        $language = (string) $request->query('language', 'ka');
-
-        return in_array($language, ['ka', 'en', 'ru'], true) ? $language : 'ka';
-    }
-
-    private function listItem(Product $product, string $language, bool $allImages = false): array
+    private function listItem(Product $product, bool $allImages = false): array
     {
         $images = array_values($product->images ?? []);
         if (! $allImages) {
@@ -166,8 +155,8 @@ class CatalogController extends Controller
             'id' => (string) $product->id,
             'product_code' => $product->product_code,
             'category_id' => $product->category_id === null ? null : (string) $product->category_id,
-            'name' => $product->localized('name', $language) ?? '',
-            'short_description' => Product::plainText($product->localized('short_description', $language)),
+            'name' => $product->name_ka ?? '',
+            'short_description' => Product::plainText($product->short_description_ka),
             'price' => (float) $product->price,
             'in_stock' => (bool) $product->in_stock,
             'stock_level' => $product->stock_level,

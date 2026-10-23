@@ -4,7 +4,6 @@ import { loginRedirect } from '../../lib/safePath.js';
 import { ExternalLink, Menu, ShieldCheck, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useI18n } from '../../contexts/i18n.js';
-import { LanguageSwitcher } from '../storefront/Header.jsx';
 import { ADMIN_SECTIONS, findAdminSection } from './sections.js';
 
 export default function AdminLayout() {
@@ -79,7 +78,6 @@ export default function AdminLayout() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <LanguageSwitcher />
                         <span className="hidden size-10 place-items-center rounded-full bg-navy text-sm font-bold text-white sm:grid">
                             {(user?.name || user?.phone || 'A').slice(0, 2).toUpperCase()}
                         </span>

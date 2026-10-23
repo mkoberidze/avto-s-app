@@ -2,30 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, Menu, Search, ShieldCheck, ShoppingCart, User, X } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
-import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useCart } from '../../contexts/CartContext.jsx';
 import { categoryRoots, childrenOf, useStorefrontData } from './StorefrontData.jsx';
 import { loginRedirect } from '../../lib/safePath.js';
-
-export function LanguageSwitcher({ dark = false }) {
-    const { lang, setLang } = useLanguage();
-    return (
-        <div className={`inline-flex rounded-lg border p-1 ${dark ? 'border-white/20' : 'border-line'}`}>
-            {['ka', 'en', 'ru'].map((code) => (
-                <button
-                    key={code}
-                    type="button"
-                    onClick={() => setLang(code)}
-                    aria-pressed={lang === code}
-                    className={`rounded-md px-2 py-1 text-xs font-bold uppercase transition ${lang === code ? (dark ? 'bg-white text-navy' : 'bg-navy text-white') : (dark ? 'text-white/60 hover:text-white' : 'text-muted hover:text-navy')}`}
-                >
-                    {code}
-                </button>
-            ))}
-        </div>
-    );
-}
 
 export default function Header() {
     const t = useI18n();
@@ -76,7 +56,6 @@ export default function Header() {
                     </button>
                 </form>
                 <div className="ml-auto flex items-center gap-1 sm:gap-2">
-                    <div className="hidden lg:block"><LanguageSwitcher /></div>
                     <Link
                         to={isAuthenticated ? '/account' : loginRedirect(`${location.pathname}${location.search}`)}
                         aria-label={isAuthenticated ? t('nav.account') : t('nav.sign_in')}
@@ -130,7 +109,6 @@ export default function Header() {
                         <Link onClick={() => setMenuOpen(false)} to="/about" className="block rounded-lg px-3 py-2 font-semibold text-navy">{t('nav.about')}</Link>
                         <Link onClick={() => setMenuOpen(false)} to="/contact" className="block rounded-lg px-3 py-2 font-semibold text-navy">{t('nav.contact')}</Link>
                     </div>
-                    <div className="mt-4"><LanguageSwitcher /></div>
                 </div>
             ) : null}
         </header>

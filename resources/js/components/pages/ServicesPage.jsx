@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../../contexts/i18n.js';
-import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import axios from 'axios';
 
 // Default service icons as fallback
@@ -11,7 +10,6 @@ const serviceIcons = [
 
 export default function ServicesPage() {
     const t = useI18n();
-    const { lang } = useLanguage();
     const [content, setContent] = useState(null);
     const navigate = useNavigate();
 
@@ -19,9 +17,9 @@ export default function ServicesPage() {
         axios.get('/api/pages/services').then(res => setContent(res.data)).catch(()=>{});
     }, []);
 
-    const title = (lang === 'ka' ? content?.title_ka : content?.title_en) || t('services.title');
-    const subtitle = (lang === 'ka' ? content?.subtitle_ka : content?.subtitle_en) || '';
-    const body = (lang === 'ka' ? content?.body_ka : content?.body_en) || t('services.body');
+    const title = content?.title_ka || t('services.title');
+    const subtitle = content?.subtitle_ka || '';
+    const body = content?.body_ka || t('services.body');
     const sections = Array.isArray(content?.sections) ? content.sections : [];
 
     return (
@@ -52,8 +50,8 @@ export default function ServicesPage() {
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {sections.map((s, i) => {
-                                const sectionTitle = lang === 'ka' ? s.title_ka : s.title_en;
-                                const sectionBody = lang === 'ka' ? s.body_ka : s.body_en;
+                                const sectionTitle = s.title_ka;
+                                const sectionBody = s.body_ka;
                                 const iconIndex = i % serviceIcons.length;
                                 const isOrange = i === 0 || i === 3; // First and last get orange
                                 const hasUploadedImage = s.image_url;

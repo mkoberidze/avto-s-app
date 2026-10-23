@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext.jsx';
-import { LanguageProvider } from '../contexts/LanguageContext.jsx';
 import { CartProvider } from '../contexts/CartContext.jsx';
 import PhoneAuthModal from './ui/PhoneAuthModal.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
@@ -60,11 +59,9 @@ function AppShell() {
 export default function App() {
     return (
         <AuthProvider>
-            <LanguageProvider>
-                <CartProvider>
-                    <AppShell />
-                </CartProvider>
-            </LanguageProvider>
+            <CartProvider>
+                <AppShell />
+            </CartProvider>
         </AuthProvider>
     );
 }

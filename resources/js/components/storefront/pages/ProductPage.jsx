@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, ShoppingCart } from 'lucide-react';
 import { getProduct, getProducts } from '../../../api/catalog.js';
 import { useI18n } from '../../../contexts/i18n.js';
-import { useLanguage } from '../../../contexts/LanguageContext.jsx';
 import { useCart } from '../../../contexts/CartContext.jsx';
 import { categoryChain, useStorefrontData } from '../StorefrontData.jsx';
 import { Button, EmptyState, Price, ProductCard, ProductSkeleton, QuantityStepper, StockBadge, ProductImage } from '../ui.jsx';
@@ -11,7 +10,6 @@ import { Button, EmptyState, Price, ProductCard, ProductSkeleton, QuantitySteppe
 export default function ProductPage() {
     const { id } = useParams();
     const t = useI18n();
-    const { lang } = useLanguage();
     const { addItem } = useCart();
     const { categories } = useStorefrontData();
     const [product, setProduct] = useState(null);
@@ -47,7 +45,7 @@ export default function ProductPage() {
                 if (!cancelled) setStatus(err.response?.status === 404 ? '404' : 'error');
             });
         return () => { cancelled = true; };
-    }, [id, lang]);
+    }, [id]);
 
     const crumbs = useMemo(() => (product ? categoryChain(categories, product.category_id) : []), [categories, product]);
     const images = product?.images || [];

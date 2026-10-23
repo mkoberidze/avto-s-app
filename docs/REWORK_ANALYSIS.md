@@ -296,7 +296,8 @@ Existing stack to keep: Laravel 12, Sanctum, Spatie roles, ichtrojan OTP, ubill 
 - `stock_level` `"****"` means high stock (treat like `"***"` in UI).
 - Images: keep remote URLs for v1.
 - Descriptions: store raw HTML from the feed; sanitize on OUTPUT.
-- Admin product editing in v1: `is_hidden`, `is_featured`, translations only. Feed fields are read-only.
-- Translation: NOT in this release. Ship Georgian only; EN/RU come in phase 5. API accepts `?language=ka|en|ru` now, falls back to ka when a translation is empty.
+- Admin product editing in v1: `is_hidden` and `is_featured` only. Feed fields are read-only. ~~translations~~ **superseded.**
+- ~~Translation: NOT in this release. Ship Georgian only; EN/RU come in phase 5. API accepts `?language=ka|en|ru` now, falls back to ka when a translation is empty.~~ **superseded.**
+- **Georgian only. EN/RU UI and catalog translation are dropped; the translation phase is cancelled.**
 - Documents tab: removed until real data exists.
 - Cart: client-side; server recomputes prices at checkout.

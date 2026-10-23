@@ -1,23 +1,18 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getCategories, getSettings } from '../../api/catalog.js';
-import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 const StorefrontDataContext = createContext(null);
 
 export function StorefrontDataProvider({ children }) {
-    const { lang } = useLanguage();
     const [settings, setSettings] = useState({ logo_url: '', carousel_images: [] });
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
         getSettings().then(setSettings).catch(() => {});
-    }, []);
-
-    useEffect(() => {
         getCategories()
             .then((rows) => setCategories(Array.isArray(rows) ? rows : []))
             .catch(() => setCategories([]));
-    }, [lang]);
+    }, []);
 
     const value = useMemo(() => ({ settings, categories }), [settings, categories]);
     return <StorefrontDataContext.Provider value={value}>{children}</StorefrontDataContext.Provider>;

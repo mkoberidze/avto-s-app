@@ -15,23 +15,10 @@ class Category extends Model
     protected function casts(): array
     {
         return [
-            'translations' => 'array',
             'is_hidden' => 'boolean',
             'nav_order' => 'integer',
             'synced_at' => 'datetime',
         ];
-    }
-
-    public function localizedName(string $language): string
-    {
-        if ($language !== 'ka') {
-            $translated = data_get($this->translations, "{$language}.name");
-            if (is_string($translated) && $translated !== '') {
-                return $translated;
-            }
-        }
-
-        return $this->name_ka;
     }
 
     /**

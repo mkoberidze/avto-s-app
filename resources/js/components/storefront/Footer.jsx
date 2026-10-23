@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
-import { LanguageSwitcher } from './Header.jsx';
 import { useStorefrontData } from './StorefrontData.jsx';
 
 export default function Footer() {
@@ -35,7 +34,6 @@ export default function Footer() {
                         <p>{phone}</p>
                         <p>{email}</p>
                     </div>
-                    <div className="mt-5"><LanguageSwitcher dark /></div>
                 </div>
             </div>
             <div className="border-t border-white/10">

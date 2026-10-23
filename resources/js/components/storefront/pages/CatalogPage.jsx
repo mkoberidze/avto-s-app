@@ -3,7 +3,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Filter, Search, SlidersHorizontal, X } from 'lucide-react';
 import { getBrands, getProducts } from '../../../api/catalog.js';
 import { useI18n } from '../../../contexts/i18n.js';
-import { useLanguage } from '../../../contexts/LanguageContext.jsx';
 import { childrenOf, categoryRoots, useStorefrontData } from '../StorefrontData.jsx';
 import { Button, EmptyState, ProductCard, ProductSkeleton } from '../ui.jsx';
 
@@ -11,7 +10,6 @@ const PER_PAGE = 24;
 
 export default function CatalogPage() {
     const t = useI18n();
-    const { lang } = useLanguage();
     const { id: categoryId } = useParams();
     const [params, setParams] = useSearchParams();
     const { categories } = useStorefrontData();
@@ -37,7 +35,7 @@ export default function CatalogPage() {
 
     useEffect(() => {
         getBrands().then((rows) => setBrands(Array.isArray(rows) ? rows : [])).catch(() => setBrands([]));
-    }, [lang]);
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -69,7 +67,7 @@ export default function CatalogPage() {
                 if (!cancelled) setLoading(false);
             });
         return () => { cancelled = true; };
-    }, [lang, categoryId, q, sort, minPrice, maxPrice, inStock, selectedBrands.join('|')]);
+    }, [categoryId, q, sort, minPrice, maxPrice, inStock, selectedBrands.join('|')]);
 
     function updateFilters(patch, replace = false) {
         const next = replace ? new URLSearchParams() : new URLSearchParams(params);

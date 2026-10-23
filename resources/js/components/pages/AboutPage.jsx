@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useI18n } from '../../contexts/i18n.js';
-import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import axios from 'axios';
 
 export default function AboutPage() {
     const t = useI18n();
-    const { lang } = useLanguage();
     const [content, setContent] = useState(null);
 
     useEffect(() => {
         axios.get('/api/pages/about').then(res => setContent(res.data)).catch(()=>{});
     }, []);
 
-    const title = (lang === 'ka' ? content?.title_ka : content?.title_en) || t('about.title');
-    const subtitle = (lang === 'ka' ? content?.subtitle_ka : content?.subtitle_en) || '';
-    const body = (lang === 'ka' ? content?.body_ka : content?.body_en) || t('about.body');
+    const title = content?.title_ka || t('about.title');
+    const subtitle = content?.subtitle_ka || '';
+    const body = content?.body_ka || t('about.body');
     const sections = Array.isArray(content?.sections) ? content.sections : [];
 
     return (
@@ -46,15 +44,15 @@ export default function AboutPage() {
                         <div className="space-y-6">
                             {sections.map((s, i) => (
                                 <div key={i} className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition-shadow duration-300">
-                                    {(lang==='ka'?s.title_ka:s.title_en) && (
+                                    {s.title_ka && (
                                         <div className="flex items-center gap-3 mb-4">
                                             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white font-semibold">{i+1}</span>
-                                            <h2 className="text-xl font-bold text-gray-800">{lang==='ka'?s.title_ka:s.title_en}</h2>
+                                            <h2 className="text-xl font-bold text-gray-800">{s.title_ka}</h2>
                                         </div>
                                     )}
-                                    {(lang==='ka'?s.body_ka:s.body_en) && (
+                                    {s.body_ka && (
                                         <div className="text-gray-600 leading-relaxed">
-                                            <div dangerouslySetInnerHTML={{ __html: (lang==='ka'?s.body_ka:s.body_en) }} />
+                                            <div dangerouslySetInnerHTML={{ __html: s.body_ka }} />
                                         </div>
                                     )}
                                 </div>

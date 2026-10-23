@@ -184,7 +184,6 @@ class AdminOrderController extends Controller
 
         return array_merge($this->listPayload($order), [
             'comment' => $order->comment,
-            'language' => $order->language,
             'attachment_url' => $order->attachment_url,
             'admin_note' => $order->admin_note,
             'updated_at' => $order->updated_at?->toISOString(),

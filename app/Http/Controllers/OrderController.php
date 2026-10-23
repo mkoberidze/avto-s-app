@@ -46,7 +46,6 @@ class OrderController extends Controller
             'customer_name' => ['required', 'string', 'max:100'],
             'address' => ['required', 'string', 'max:500'],
             'comment' => ['nullable', 'string', 'max:2000'],
-            'language' => ['nullable', 'in:ka,en,ru'],
             'client_token' => ['nullable', 'string', 'max:64'],
             'attachment' => ['sometimes', 'file', 'max:20480'],
             'items' => ['required', 'array', 'min:1', 'max:50'],
@@ -136,7 +135,6 @@ class OrderController extends Controller
                     'comment' => $data['comment'] ?? null,
                     'attachment_url' => $attachmentUrl,
                     'total' => number_format($total, 2, '.', ''),
-                    'language' => $data['language'] ?? null,
                     'client_token' => $token,
                 ]);
 

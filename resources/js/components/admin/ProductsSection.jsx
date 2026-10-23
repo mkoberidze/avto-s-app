@@ -144,7 +144,6 @@ export default function ProductsSection() {
                                                 {product.image ? <img src={product.image} alt="" className="size-12 rounded-lg bg-surface object-cover" /> : <span className="size-12 rounded-lg bg-surface" />}
                                                 <div>
                                                     <p className="max-w-sm line-clamp-2 font-bold text-navy">{product.name_ka}</p>
-                                                    <p className="text-xs text-muted">EN {product.has_en ? t('admin.has_translation') : t('admin.missing_translation')} · RU {product.has_ru ? t('admin.has_translation') : t('admin.missing_translation')}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -218,34 +217,22 @@ function pickList(detail) {
         is_hidden: detail.is_hidden,
         is_featured: detail.is_featured,
         image: detail.image,
-        has_en: detail.has_en,
-        has_ru: detail.has_ru,
     };
 }
 
 function ProductEditor({ id, onClose, onSaved, onFail }) {
     const t = useI18n();
     const [product, setProduct] = useState(null);
-    const [lang, setLang] = useState('en');
-    const [form, setForm] = useState({ en: { name: '', short_description: '', description: '' }, ru: { name: '', short_description: '', description: '' } });
+    const [hidden, setHidden] = useState(false);
+    const [featured, setFeatured] = useState(false);
     const [dirty, setDirty] = useState(false);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         getAdminProduct(id).then((data) => {
             setProduct(data);
-            setForm({
-                en: {
-                    name: data.translations?.en?.name || '',
-                    short_description: data.translations?.en?.short_description || '',
-                    description: data.translations?.en?.description || '',
-                },
-                ru: {
-                    name: data.translations?.ru?.name || '',
-                    short_description: data.translations?.ru?.short_description || '',
-                    description: data.translations?.ru?.description || '',
-                },
-            });
+            setHidden(Boolean(data.is_hidden));
+            setFeatured(Boolean(data.is_featured));
         }).catch(onFail);
     }, [id]);
 
@@ -261,16 +248,11 @@ function ProductEditor({ id, onClose, onSaved, onFail }) {
         onClose();
     }
 
-    function change(field, value) {
-        setDirty(true);
-        setForm((current) => ({ ...current, [lang]: { ...current[lang], [field]: value } }));
-    }
-
     async function submit(event) {
         event.preventDefault();
         setSaving(true);
         try {
-            await updateAdminProduct(id, { translations: form });
+            await updateAdminProduct(id, { is_hidden: hidden, is_featured: featured });
             setDirty(false);
             onSaved();
         } catch {
@@ -306,16 +288,14 @@ function ProductEditor({ id, onClose, onSaved, onFail }) {
                     </div>
                     <label className="form-label">{t('admin.short_description')}<textarea readOnly rows={3} value={product.short_description_ka || ''} className="form-input resize-none bg-surface" /></label>
                     <label className="form-label">{t('admin.description')}<textarea readOnly rows={5} value={product.description_ka || ''} className="form-input resize-none bg-surface" /></label>
-                    <div className="flex gap-2 border-b border-line">
-                        {['en', 'ru'].map((code) => (
-                            <button key={code} type="button" onClick={() => setLang(code)} className={`border-b-2 px-4 py-3 text-sm font-bold ${lang === code ? 'border-accent text-accent' : 'border-transparent text-muted'}`}>
-                                {t(code === 'en' ? 'admin.lang_en' : 'admin.lang_ru')} {code === 'en' ? (product.has_en ? '✓' : '') : (product.has_ru ? '✓' : '')}
-                            </button>
-                        ))}
-                    </div>
-                    <label className="form-label">{t('admin.product_name')}<input value={form[lang].name} onChange={(e) => change('name', e.target.value)} className="form-input" /></label>
-                    <label className="form-label">{t('admin.short_description')}<textarea rows={3} value={form[lang].short_description} onChange={(e) => change('short_description', e.target.value)} className="form-input resize-none" /></label>
-                    <label className="form-label">{t('admin.description')}<textarea rows={8} value={form[lang].description} onChange={(e) => change('description', e.target.value)} className="form-input resize-none" /></label>
+                    <label className="flex items-center gap-2 text-sm font-semibold text-navy">
+                        <input type="checkbox" checked={hidden} onChange={(e) => { setDirty(true); setHidden(e.target.checked); }} className="size-4 accent-accent" />
+                        {t('admin.hidden')}
+                    </label>
+                    <label className="flex items-center gap-2 text-sm font-semibold text-navy">
+                        <input type="checkbox" checked={featured} onChange={(e) => { setDirty(true); setFeatured(e.target.checked); }} className="size-4 accent-accent" />
+                        {t('admin.featured')}
+                    </label>
                     <div className="flex justify-end gap-3 border-t border-line pt-5">
                         <Button type="button" variant="ghost" onClick={close}>{t('admin.cancel')}</Button>
                         <Button disabled={saving}>{t('admin.save')}</Button>

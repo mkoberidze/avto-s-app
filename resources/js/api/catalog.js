@@ -1,18 +1,8 @@
 import axios from 'axios';
 
-function currentLanguage() {
-    try {
-        const stored = localStorage.getItem('sentra_language');
-        if (stored === 'ka' || stored === 'en' || stored === 'ru') {
-            return stored;
-        }
-    } catch {}
-    return 'ka';
-}
-
 function catalogGet(url, params = {}) {
     return axios.get(url, {
-        params: { ...params, language: currentLanguage() },
+        params,
         paramsSerializer: {
             serialize(p) {
                 const search = new URLSearchParams();

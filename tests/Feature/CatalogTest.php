@@ -59,7 +59,6 @@ class CatalogTest extends TestCase
         $this->artisan('catalog:sync')->assertSuccessful();
 
         Product::query()->whereKey(101)->update([
-            'translations' => ['en' => ['name' => 'Keep me']],
             'is_hidden' => true,
             'is_featured' => true,
         ]);
@@ -68,7 +67,6 @@ class CatalogTest extends TestCase
         $this->artisan('catalog:sync')->assertSuccessful();
 
         $product = Product::query()->find(101);
-        $this->assertSame(['en' => ['name' => 'Keep me']], $product->translations);
         $this->assertTrue($product->is_hidden);
         $this->assertTrue($product->is_featured);
         $this->assertSame(99, Category::query()->find(32)->nav_order);
@@ -294,31 +292,23 @@ class CatalogTest extends TestCase
         $this->assertCount(2, $this->getJson('/api/products/101')->json('images'));
     }
 
-    public function test_public_api_uses_translation_name_and_sanitizes_translated_description(): void
+    public function test_language_query_is_ignored_and_returns_georgian(): void
     {
         $this->fakeFeed();
         $this->artisan('catalog:sync')->assertSuccessful();
 
-        Product::query()->whereKey(101)->update([
-            'translations' => [
-                'en' => [
-                    'name' => 'English camera',
-                    'description' => '<p>Hello EN</p><script>alert(1)</script>',
-                ],
-            ],
-        ]);
+        $plain = $this->getJson('/api/products/101')->assertOk()->json();
+        $en = $this->getJson('/api/products/101?language=en')->assertOk()->json();
+        $ru = $this->getJson('/api/products/101?language=ru')->assertOk()->json();
+        $this->assertSame('IP camera A', $plain['name']);
+        $this->assertSame($plain['name'], $en['name']);
+        $this->assertSame($plain['name'], $ru['name']);
+        $this->assertSame($plain['short_description'], $en['short_description']);
 
-        $en = $this->getJson('/api/products/101?language=en')->json();
-        $this->assertSame('English camera', $en['name']);
-        $this->assertStringContainsString('<p>Hello EN</p>', $en['description']);
-        $this->assertStringNotContainsString('<script', $en['description']);
-
-        $this->assertSame('English camera', $this->getJson('/api/products?q=CAM-101&language=en')->json('products.0.name'));
-
-        $ru = $this->getJson('/api/products/101?language=ru')->json();
-        $this->assertSame('IP camera A', $ru['name']);
-        $ka = $this->getJson('/api/products/101?language=ka')->json();
-        $this->assertSame('IP camera A', $ka['name']);
+        $cats = $this->getJson('/api/categories')->assertOk()->json();
+        $catsEn = $this->getJson('/api/categories?language=en')->assertOk()->json();
+        $this->assertSame($cats[0]['name'], $catsEn[0]['name']);
+        $this->assertSame('ვიდეო მეთვალყურეობა', collect($cats)->firstWhere('id', '32')['name']);
     }
 
     private function fakeFeed(): void

@@ -3,13 +3,11 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Headphones, PackageCheck, ShieldCheck, Wrench } from 'lucide-react';
 import { getProducts } from '../../../api/catalog.js';
 import { useI18n } from '../../../contexts/i18n.js';
-import { useLanguage } from '../../../contexts/LanguageContext.jsx';
 import { useStorefrontData } from '../StorefrontData.jsx';
 import { ProductCard, ProductSkeleton } from '../ui.jsx';
 
 export default function HomePage() {
     const t = useI18n();
-    const { lang } = useLanguage();
     const { settings, categories } = useStorefrontData();
     const [featured, setFeatured] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,7 +37,7 @@ export default function HomePage() {
                 if (!cancelled) setLoading(false);
             });
         return () => { cancelled = true; };
-    }, [lang]);
+    }, []);
 
     const slides = [
         { title: t('home.hero1Title'), text: t('home.hero1Text') },

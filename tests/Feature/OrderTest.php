@@ -212,6 +212,8 @@ class OrderTest extends TestCase
         $this->assertNotEmpty($detail->json('attachment_url'));
         $this->assertSame('Tbilisi', $detail->json('address'));
         $this->assertSame('please call', $detail->json('comment'));
+        $this->assertArrayNotHasKey('language', $detail->json());
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('orders', 'language'));
     }
 
     public function test_sms_failure_still_creates_order(): void

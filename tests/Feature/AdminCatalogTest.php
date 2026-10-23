@@ -95,7 +95,7 @@ class AdminCatalogTest extends TestCase
         Product::query()->whereKey(101)->update([
             'is_hidden' => true,
             'is_featured' => true,
-            'translations' => ['en' => ['name' => 'Hidden EN cam']],
+            'name_ka' => 'დამალული კამერა',
         ]);
         Product::query()->whereKey(102)->update(['in_feed' => false]);
 
@@ -105,46 +105,35 @@ class AdminCatalogTest extends TestCase
         $this->assertSame(12, $all['total']);
         $hidden = collect($all['products'])->firstWhere('id', '101');
         $this->assertTrue($hidden['is_hidden']);
-        $this->assertTrue($hidden['has_en']);
-        $this->assertFalse($hidden['has_ru']);
+        $this->assertArrayNotHasKey('has_en', $hidden);
+        $this->assertArrayNotHasKey('translations', $hidden);
 
         $this->assertSame(1, $this->getJson('/api/admin/products?status=hidden')->json('total'));
         $this->assertSame(1, $this->getJson('/api/admin/products?status=gone')->json('total'));
         $this->assertSame(1, $this->getJson('/api/admin/products?featured=1')->json('total'));
-        $this->assertSame(1, $this->getJson('/api/admin/products?q=Hidden%20EN')->json('total'));
+        $this->assertSame(1, $this->getJson('/api/admin/products?q='.urlencode('დამალული'))->json('total'));
         $this->assertGreaterThanOrEqual(1, $this->getJson('/api/admin/products?category_id=32')->json('total'));
         $this->assertSame(4, $this->getJson('/api/admin/products?brand=Hikvision')->json('total'));
     }
 
-    public function test_admin_product_update_allows_only_owned_fields_and_merges_translations(): void
+    public function test_admin_product_update_allows_only_owned_fields(): void
     {
         $this->syncFeed();
-        Product::query()->whereKey(101)->update([
-            'translations' => [
-                'en' => ['name' => 'Keep EN', 'description' => 'Keep desc'],
-                'ru' => ['name' => 'Keep RU'],
-            ],
-        ]);
-
         Sanctum::actingAs($this->admin());
 
         $this->putJson('/api/admin/products/101', ['price' => 1])->assertStatus(422);
+        $this->putJson('/api/admin/products/101', [
+            'translations' => ['en' => ['name' => 'New EN']],
+        ])->assertStatus(422);
 
         $updated = $this->putJson('/api/admin/products/101', [
             'is_hidden' => true,
             'is_featured' => true,
-            'translations' => [
-                'en' => ['name' => 'New EN'],
-                'ru' => ['short_description' => 'RU short'],
-            ],
         ])->assertOk()->json();
 
         $this->assertTrue($updated['is_hidden']);
         $this->assertTrue($updated['is_featured']);
-        $this->assertSame('New EN', $updated['translations']['en']['name']);
-        $this->assertSame('Keep desc', $updated['translations']['en']['description']);
-        $this->assertSame('Keep RU', $updated['translations']['ru']['name']);
-        $this->assertSame('RU short', $updated['translations']['ru']['short_description']);
+        $this->assertArrayNotHasKey('translations', $updated);
         $this->assertSame('IP camera A', $updated['name_ka']);
         $this->assertEquals(100, $updated['price']);
 
@@ -152,8 +141,6 @@ class AdminCatalogTest extends TestCase
         $product = Product::query()->find(101);
         $this->assertTrue($product->is_hidden);
         $this->assertTrue($product->is_featured);
-        $this->assertSame('New EN', $product->translations['en']['name']);
-        $this->assertSame('Keep desc', $product->translations['en']['description']);
     }
 
     public function test_admin_product_detail_includes_hidden_and_out_of_feed(): void
@@ -180,15 +167,18 @@ class AdminCatalogTest extends TestCase
 
         $this->putJson('/api/admin/categories/32', ['name_ka' => 'Nope'])->assertStatus(422);
 
+        $this->putJson('/api/admin/categories/32', [
+            'translations' => ['en' => ['name' => 'CCTV']],
+        ])->assertStatus(422);
+
         $updated = $this->putJson('/api/admin/categories/32', [
             'is_hidden' => true,
             'nav_order' => 1,
-            'translations' => ['en' => ['name' => 'CCTV']],
         ])->assertOk()->json();
 
         $this->assertTrue($updated['is_hidden']);
         $this->assertSame(1, $updated['nav_order']);
-        $this->assertSame('CCTV', $updated['translations']['en']['name']);
+        $this->assertArrayNotHasKey('translations', $updated);
 
         $this->putJson('/api/admin/categories/32', ['nav_order' => null])->assertOk()->assertJsonPath('nav_order', null);
     }

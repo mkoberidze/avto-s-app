@@ -154,7 +154,6 @@ export default function OrderDetailSection() {
                         </p>
                         <p className="mt-3 text-sm text-muted">{t('checkout.address')}: {order.address}</p>
                         {order.comment ? <p className="mt-2 text-sm text-muted">{t('checkout.comment')}: {order.comment}</p> : null}
-                        <p className="mt-2 text-sm text-muted">{t('admin.language')}: {(order.language || '—').toUpperCase()}</p>
                         {order.attachment_url ? (
                             <p className="mt-2 text-sm">
                                 <a href={order.attachment_url} target="_blank" rel="noreferrer" className="font-bold text-accent">{t('admin.attachment')} · {t('admin.download')}</a>

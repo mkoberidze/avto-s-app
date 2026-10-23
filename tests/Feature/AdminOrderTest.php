@@ -265,7 +265,6 @@ class AdminOrderTest extends TestCase
             'comment' => null,
             'attachment_url' => null,
             'total' => 0,
-            'language' => 'ka',
             'client_token' => null,
         ], $attrs));
     }

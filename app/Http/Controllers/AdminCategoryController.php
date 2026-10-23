@@ -34,7 +34,6 @@ class AdminCategoryController extends Controller
                 'id' => (string) $category->id,
                 'parent_id' => $category->parent_id === null ? null : (string) $category->parent_id,
                 'name_ka' => $category->name_ka,
-                'translations' => (object) ($category->translations ?? []),
                 'nav_order' => $category->nav_order,
                 'is_hidden' => (bool) $category->is_hidden,
                 'product_count' => $total,
@@ -51,10 +50,10 @@ class AdminCategoryController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $extra = array_values(array_diff(array_keys($request->all()), ['is_hidden', 'nav_order', 'translations']));
+        $extra = array_values(array_diff(array_keys($request->all()), ['is_hidden', 'nav_order']));
         if ($extra !== []) {
             return response()->json([
-                'message' => 'Only is_hidden, nav_order and translations can be updated.',
+                'message' => 'Only is_hidden and nav_order can be updated.',
                 'fields' => $extra,
             ], 422);
         }
@@ -62,11 +61,6 @@ class AdminCategoryController extends Controller
         $data = $request->validate([
             'is_hidden' => ['sometimes', 'boolean'],
             'nav_order' => ['sometimes', 'nullable', 'integer'],
-            'translations' => ['sometimes', 'array'],
-            'translations.en' => ['sometimes', 'array'],
-            'translations.ru' => ['sometimes', 'array'],
-            'translations.en.name' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'translations.ru.name' => ['sometimes', 'nullable', 'string', 'max:255'],
         ]);
 
         if (array_key_exists('is_hidden', $data)) {
@@ -74,18 +68,6 @@ class AdminCategoryController extends Controller
         }
         if (array_key_exists('nav_order', $data)) {
             $category->nav_order = $data['nav_order'];
-        }
-        if (array_key_exists('translations', $data)) {
-            $current = $category->translations ?? [];
-            foreach (['en', 'ru'] as $language) {
-                if (! isset($data['translations'][$language]) || ! is_array($data['translations'][$language])) {
-                    continue;
-                }
-                if (array_key_exists('name', $data['translations'][$language])) {
-                    $current[$language]['name'] = $data['translations'][$language]['name'];
-                }
-            }
-            $category->translations = $current;
         }
 
         $category->save();
@@ -96,7 +78,6 @@ class AdminCategoryController extends Controller
             'id' => (string) $fresh->id,
             'parent_id' => $fresh->parent_id === null ? null : (string) $fresh->parent_id,
             'name_ka' => $fresh->name_ka,
-            'translations' => (object) ($fresh->translations ?? []),
             'nav_order' => $fresh->nav_order,
             'is_hidden' => (bool) $fresh->is_hidden,
         ]);

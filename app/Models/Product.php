@@ -23,7 +23,6 @@ class Product extends Model
             'is_featured' => 'boolean',
             'features' => 'array',
             'images' => 'array',
-            'translations' => 'array',
             'first_seen_at' => 'datetime',
             'synced_at' => 'datetime',
         ];
@@ -32,35 +31,6 @@ class Product extends Model
     public function scopeVisible(Builder $query): Builder
     {
         return $query->where('in_feed', true)->where('is_hidden', false);
-    }
-
-    public function localized(string $field, string $language): ?string
-    {
-        if ($language !== 'ka') {
-            $translated = data_get($this->translations, "{$language}.{$field}");
-            if (is_string($translated) && $translated !== '') {
-                return $translated;
-            }
-        }
-
-        return match ($field) {
-            'name' => $this->name_ka,
-            'short_description' => $this->short_description_ka,
-            'description' => $this->description_ka,
-            default => null,
-        };
-    }
-
-    public function localizedFeatures(string $language): array
-    {
-        if ($language !== 'ka') {
-            $translated = data_get($this->translations, "{$language}.features");
-            if (is_array($translated) && $translated !== []) {
-                return $translated;
-            }
-        }
-
-        return is_array($this->features) ? $this->features : [];
     }
 
     public static function plainText(?string $html): string

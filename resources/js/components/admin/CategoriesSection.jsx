@@ -22,8 +22,6 @@ export default function CategoriesSection() {
                 const next = {};
                 list.forEach((row) => {
                     next[row.id] = {
-                        name_en: row.translations?.en?.name || '',
-                        name_ru: row.translations?.ru?.name || '',
                         nav_order: row.nav_order == null ? '' : String(row.nav_order),
                         is_hidden: Boolean(row.is_hidden),
                     };
@@ -54,9 +52,7 @@ export default function CategoriesSection() {
     const dirty = rows.some((row) => {
         const d = drafts[row.id];
         if (!d) return false;
-        return d.name_en !== (row.translations?.en?.name || '')
-            || d.name_ru !== (row.translations?.ru?.name || '')
-            || d.nav_order !== (row.nav_order == null ? '' : String(row.nav_order))
+        return d.nav_order !== (row.nav_order == null ? '' : String(row.nav_order))
             || d.is_hidden !== Boolean(row.is_hidden);
     });
 
@@ -78,7 +74,6 @@ export default function CategoriesSection() {
             const saved = await updateAdminCategory(row.id, {
                 is_hidden: d.is_hidden,
                 nav_order: d.nav_order === '' ? null : Number(d.nav_order),
-                translations: { en: { name: d.name_en }, ru: { name: d.name_ru } },
             });
             setRows((list) => list.map((item) => (item.id === row.id ? { ...item, ...saved, product_count: item.product_count } : item)));
         } catch {
@@ -124,8 +119,6 @@ export default function CategoriesSection() {
                             <thead className="bg-surface text-xs uppercase tracking-wider text-muted">
                                 <tr>
                                     <th className="px-5 py-3 font-semibold">{t('admin.name_ka')}</th>
-                                    <th className="px-5 py-3 font-semibold">{t('admin.name_en')}</th>
-                                    <th className="px-5 py-3 font-semibold">{t('admin.name_ru')}</th>
                                     <th className="px-5 py-3 font-semibold">{t('admin.nav_order')}</th>
                                     <th className="px-5 py-3 font-semibold">{t('admin.product_count')}</th>
                                     <th className="px-5 py-3 font-semibold">{t('admin.hidden')}</th>
@@ -134,12 +127,10 @@ export default function CategoriesSection() {
                             </thead>
                             <tbody className="divide-y divide-line">
                                 {ordered.map((row) => {
-                                    const d = drafts[row.id] || { name_en: '', name_ru: '', nav_order: '', is_hidden: false };
+                                    const d = drafts[row.id] || { nav_order: '', is_hidden: false };
                                     return (
                                         <tr key={row.id} className="hover:bg-surface/60">
                                             <td className="px-5 py-3 font-semibold text-navy" style={{ paddingLeft: `${1.25 + row.depth * 1.25}rem` }}>{row.name_ka}</td>
-                                            <td className="px-3 py-3"><input value={d.name_en} onChange={(e) => patch(row.id, 'name_en', e.target.value)} className="h-10 w-full rounded-lg border border-line px-2 text-sm" /></td>
-                                            <td className="px-3 py-3"><input value={d.name_ru} onChange={(e) => patch(row.id, 'name_ru', e.target.value)} className="h-10 w-full rounded-lg border border-line px-2 text-sm" /></td>
                                             <td className="px-3 py-3"><input inputMode="numeric" value={d.nav_order} onChange={(e) => patch(row.id, 'nav_order', e.target.value)} placeholder={t('admin.nav_order_hint')} className="h-10 w-24 rounded-lg border border-line px-2 text-sm" /></td>
                                             <td className="px-5 py-3 text-muted">{row.product_count}</td>
                                             <td className="px-5 py-3">

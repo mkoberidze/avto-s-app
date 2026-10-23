@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import { translateStatus } from '../../contexts/i18n.js';
 import { useI18n } from '../../contexts/i18n.js';
 import AttachmentPreview from '../ui/AttachmentPreview.jsx';
@@ -11,7 +10,6 @@ export default function FormDetailsPage() {
     const [form, setForm] = useState(null);
     const [editing, setEditing] = useState(false);
     const [data, setData] = useState({ title: '', input_one: '', input_two: '', input_three: '', status: 'unopened', attachment: null });
-    const { lang } = useLanguage();
     const t = useI18n();
 
     useEffect(() => {
@@ -52,10 +50,10 @@ export default function FormDetailsPage() {
                         <div className="grid sm:grid-cols-2 gap-3">
                             <input className="border border-black/10 rounded px-3 py-2" placeholder="Title" value={data.title} onChange={(e)=>setData({...data,title:e.target.value})} />
                             <select className="border border-black/10 rounded px-3 py-2" value={data.status} onChange={(e)=>setData({...data,status:e.target.value})}>
-                                <option value="unopened">{translateStatus('unopened', lang)}</option>
-                                <option value="under_review">{translateStatus('under_review', lang)}</option>
-                                <option value="in_progress">{translateStatus('in_progress', lang)}</option>
-                                <option value="completed">{translateStatus('completed', lang)}</option>
+                                <option value="unopened">{translateStatus('unopened')}</option>
+                                <option value="under_review">{translateStatus('under_review')}</option>
+                                <option value="in_progress">{translateStatus('in_progress')}</option>
+                                <option value="completed">{translateStatus('completed')}</option>
                             </select>
                             <input className="border border-black/10 rounded px-3 py-2" placeholder={t('details.input_one')} value={data.input_one} onChange={(e)=>setData({...data,input_one:e.target.value})} />
                             <input className="border border-black/10 rounded px-3 py-2" placeholder={t('details.input_two')} value={data.input_two} onChange={(e)=>setData({...data,input_two:e.target.value})} />
@@ -98,7 +96,7 @@ export default function FormDetailsPage() {
                         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <dt className="text-xs text-[#6b7280]">{t('details.status')}</dt>
-                                <dd className="text-sm text-[#111827]">{translateStatus(form.status, lang)}</dd>
+                                <dd className="text-sm text-[#111827]">{translateStatus(form.status)}</dd>
                             </div>
                             <div>
                                 <dt className="text-xs text-[#6b7280]">{t('details.input_one')}</dt>
