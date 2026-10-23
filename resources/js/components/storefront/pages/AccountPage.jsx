@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useAuth } from '../../../contexts/AuthContext.jsx';
 import { useI18n } from '../../../contexts/i18n.js';
 import { loginRedirect } from '../../../lib/safePath.js';
+import { downloadAuthorized } from '../../../lib/downloadAuth.js';
 import { Button, EmptyState, Price } from '../ui.jsx';
 
 function statusClass(status) {
@@ -160,6 +161,17 @@ export default function AccountPage() {
                                                         <>
                                                             <p>{t('checkout.address')}: {detail.address}</p>
                                                             {detail.comment ? <p className="mt-1">{t('checkout.comment')}: {detail.comment}</p> : null}
+                                                            {detail.attachment_url ? (
+                                                                <p className="mt-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="font-bold text-accent"
+                                                                        onClick={() => downloadAuthorized(detail.attachment_url, t('admin.attachment')).catch(() => setDetailError(t('account.load_error')))}
+                                                                    >
+                                                                        {t('admin.attachment')} · {t('admin.download')}
+                                                                    </button>
+                                                                </p>
+                                                            ) : null}
                                                             <ul className="mt-3 space-y-1">
                                                                 {(detail.items || []).map((item, i) => (
                                                                     <li key={`${item.product_id}-${i}`}>

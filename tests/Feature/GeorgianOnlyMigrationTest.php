@@ -36,7 +36,9 @@ class GeorgianOnlyMigrationTest extends TestCase
 
     public function test_migration_is_safe_when_translation_columns_already_exist_and_down_works(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+        $this->artisan('migrate:rollback', [
+            '--path' => 'database/migrations/2026_10_23_000019_drop_multilingual_catalog_columns.php',
+        ])->assertSuccessful();
 
         $this->assertTrue(Schema::hasColumn('products', 'translations'));
         $this->assertTrue(Schema::hasColumn('products', 'source_hash'));
@@ -63,7 +65,9 @@ class GeorgianOnlyMigrationTest extends TestCase
             });
         }
 
-        $this->artisan('migrate')->assertSuccessful();
+        $this->artisan('migrate', [
+            '--path' => 'database/migrations/2026_10_23_000019_drop_multilingual_catalog_columns.php',
+        ])->assertSuccessful();
 
         $this->assertFalse(Schema::hasColumn('products', 'translations'));
         $this->assertFalse(Schema::hasColumn('products', 'source_hash'));
@@ -73,7 +77,9 @@ class GeorgianOnlyMigrationTest extends TestCase
         $this->assertFalse(Schema::hasColumn('orders', 'language'));
         $this->assertFalse(Schema::hasTable('translation_cache'));
 
-        $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+        $this->artisan('migrate:rollback', [
+            '--path' => 'database/migrations/2026_10_23_000019_drop_multilingual_catalog_columns.php',
+        ])->assertSuccessful();
 
         $this->assertTrue(Schema::hasColumn('products', 'translations'));
         $this->assertTrue(Schema::hasColumn('products', 'source_hash'));

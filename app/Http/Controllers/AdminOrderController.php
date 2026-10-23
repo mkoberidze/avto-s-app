@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ServesOrderAttachments;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
@@ -10,6 +11,8 @@ use Illuminate\Support\Carbon;
 
 class AdminOrderController extends Controller
 {
+    use ServesOrderAttachments;
+
     private const STATUSES = ['new', 'under_review', 'in_progress', 'completed'];
 
     public function index(Request $request): JsonResponse
@@ -55,6 +58,16 @@ class AdminOrderController extends Controller
         }
 
         return response()->json($this->detailPayload($order));
+    }
+
+    public function attachment(int $id)
+    {
+        $order = Order::query()->find($id);
+        if (! $order) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        return $this->streamOrderAttachment($order);
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -184,7 +197,7 @@ class AdminOrderController extends Controller
 
         return array_merge($this->listPayload($order), [
             'comment' => $order->comment,
-            'attachment_url' => $order->attachment_url,
+            'attachment_url' => $this->attachmentUrl($order, true),
             'admin_note' => $order->admin_note,
             'updated_at' => $order->updated_at?->toISOString(),
             'user' => $order->user ? [

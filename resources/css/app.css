@@ -8,7 +8,7 @@
 @source '../**/*.jsx';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Noto Sans Georgian', 'Noto Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-sans-ka: 'Noto Sans Georgian', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
     --font-storefront: 'Noto Sans Georgian', 'Noto Sans', sans-serif;
@@ -24,14 +24,6 @@
 
     --shadow-card: 0 12px 34px rgba(11, 41, 66, 0.1);
     --spacing-18: 4.5rem;
-}
-
-.lang-ka {
-    font-family: var(--font-sans-ka);
-}
-
-.app-uppercase {
-    text-transform: uppercase;
 }
 
 .storefront-root {

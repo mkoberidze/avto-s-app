@@ -2,10 +2,7 @@ import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext.jsx';
 import { CartProvider } from '../contexts/CartContext.jsx';
-import PhoneAuthModal from './ui/PhoneAuthModal.jsx';
-import ProtectedRoute from './routes/ProtectedRoute.jsx';
 import StorefrontLayout from './storefront/StorefrontLayout.jsx';
-import LegacyLayout from './layout/LegacyLayout.jsx';
 import HomePage from './storefront/pages/HomePage.jsx';
 import CatalogPage from './storefront/pages/CatalogPage.jsx';
 import ProductPage from './storefront/pages/ProductPage.jsx';
@@ -16,9 +13,6 @@ import AccountPage from './storefront/pages/AccountPage.jsx';
 import AboutStorePage from './storefront/pages/AboutStorePage.jsx';
 import ContactPage from './storefront/pages/ContactPage.jsx';
 import NotFoundPage from './storefront/pages/NotFoundPage.jsx';
-import FormsPage from './pages/FormsPage.jsx';
-import FormDetailsPage from './pages/FormDetailsPage.jsx';
-import ServicesPage from './pages/ServicesPage.jsx';
 import AdminLayout from './admin/AdminLayout.jsx';
 import AdminPage from './admin/AdminPage.jsx';
 import OrderDetailSection from './admin/OrderDetailSection.jsx';
@@ -27,11 +21,9 @@ function AppShell() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route element={<LegacyLayout />}>
-                    <Route path="/services" element={<ServicesPage />} />
-                    <Route path="/forms" element={<ProtectedRoute><FormsPage /></ProtectedRoute>} />
-                    <Route path="/forms/:id" element={<ProtectedRoute><FormDetailsPage /></ProtectedRoute>} />
-                </Route>
+                <Route path="/forms" element={<Navigate to="/" replace />} />
+                <Route path="/forms/*" element={<Navigate to="/" replace />} />
+                <Route path="/services" element={<Navigate to="/" replace />} />
                 <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<Navigate to="dashboard" replace />} />
                     <Route path="orders/:id" element={<OrderDetailSection />} />
@@ -51,7 +43,6 @@ function AppShell() {
                     <Route path="*" element={<NotFoundPage />} />
                 </Route>
             </Routes>
-            <PhoneAuthModal />
         </BrowserRouter>
     );
 }

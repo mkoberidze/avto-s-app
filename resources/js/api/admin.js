@@ -56,6 +56,14 @@ export function updateAdminOrder(id, payload) {
     return axios.patch(`/api/admin/orders/${id}`, payload).then((res) => res.data);
 }
 
+export function getAdminMessages(params = {}) {
+    return axios.get('/api/admin/messages', { params }).then((res) => res.data);
+}
+
+export function updateAdminMessage(id, payload) {
+    return axios.patch(`/api/admin/messages/${id}`, payload).then((res) => res.data);
+}
+
 export function uploadCarousel(file, index) {
     const data = new FormData();
     data.append('carousel_image', file);

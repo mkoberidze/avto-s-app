@@ -40,6 +40,7 @@ class AdminOrderTest extends TestCase
     {
         $this->getJson('/api/admin/orders')->assertUnauthorized();
         $this->getJson('/api/admin/orders/1')->assertUnauthorized();
+        $this->getJson('/api/admin/orders/1/attachment')->assertUnauthorized();
         $this->patchJson('/api/admin/orders/1', ['status' => 'new'])->assertUnauthorized();
         $this->getJson('/api/admin/dashboard')->assertUnauthorized();
     }
@@ -49,6 +50,7 @@ class AdminOrderTest extends TestCase
         Sanctum::actingAs($this->user());
         $this->getJson('/api/admin/orders')->assertForbidden();
         $this->getJson('/api/admin/orders/1')->assertForbidden();
+        $this->getJson('/api/admin/orders/1/attachment')->assertForbidden();
         $this->patchJson('/api/admin/orders/1', ['status' => 'new'])->assertForbidden();
         $this->getJson('/api/admin/dashboard')->assertForbidden();
     }

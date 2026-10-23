@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ServesOrderAttachments;
 use App\Models\Order;
 use App\Models\Product;
 use App\Support\UbillSms;
@@ -9,10 +10,12 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    use ServesOrderAttachments;
+
     public function index(Request $request)
     {
         $orders = Order::query()
@@ -40,6 +43,19 @@ class OrderController extends Controller
         return response()->json($this->detailPayload($order));
     }
 
+    public function attachment(Request $request, int $id)
+    {
+        $order = Order::query()
+            ->where('user_id', $request->user()->id)
+            ->find($id);
+
+        if (! $order) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        return $this->streamOrderAttachment($order);
+    }
+
     public function store(Request $request, UbillSms $sms)
     {
         $data = $request->validate([
@@ -53,10 +69,11 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
         ]);
 
-        if ($request->hasFile('attachment') && ! $this->allowedAttachment($request->file('attachment'))) {
-            return response()->json([
-                'message' => 'The attachment must be a file of type: pdf, jpg, jpeg, png, webp, dwg.',
-            ], 422);
+        if ($request->hasFile('attachment')) {
+            $error = $this->attachmentError($request->file('attachment'));
+            if ($error !== null) {
+                return response()->json(['message' => $error], 422);
+            }
         }
 
         $user = $request->user();
@@ -120,12 +137,6 @@ class OrderController extends Controller
 
         try {
             $order = DB::transaction(function () use ($request, $user, $data, $token, $snapshots, $total, $customerName) {
-                $attachmentUrl = null;
-                if ($request->hasFile('attachment')) {
-                    $path = $request->file('attachment')->store('attachments', 'public');
-                    $attachmentUrl = Storage::disk('public')->url($path);
-                }
-
                 $order = Order::query()->create([
                     'user_id' => $user->id,
                     'status' => 'new',
@@ -133,13 +144,25 @@ class OrderController extends Controller
                     'phone' => $user->phone,
                     'address' => $data['address'],
                     'comment' => $data['comment'] ?? null,
-                    'attachment_url' => $attachmentUrl,
+                    'attachment_url' => null,
+                    'attachment_path' => null,
+                    'attachment_name' => null,
                     'total' => number_format($total, 2, '.', ''),
                     'client_token' => $token,
                 ]);
 
                 foreach ($snapshots as $item) {
                     $order->items()->create($item);
+                }
+
+                if ($request->hasFile('attachment')) {
+                    $file = $request->file('attachment');
+                    $ext = strtolower($file->getClientOriginalExtension());
+                    $stored = Str::random(40).'.'.$ext;
+                    $path = $file->storeAs('orders/'.$order->id, $stored, 'local');
+                    $order->attachment_path = $path;
+                    $order->attachment_name = $file->getClientOriginalName();
+                    $order->save();
                 }
 
                 if ($user->name === null || trim((string) $user->name) === '') {
@@ -172,11 +195,31 @@ class OrderController extends Controller
         return response()->json($this->listPayload($order), 201);
     }
 
-    private function allowedAttachment($file): bool
+    private function attachmentError($file): ?string
     {
         $ext = strtolower($file->getClientOriginalExtension());
+        $allowed = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'dwg'];
+        if (! in_array($ext, $allowed, true)) {
+            return 'The attachment must be a file of type: pdf, jpg, jpeg, png, webp, dwg.';
+        }
 
-        return in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'dwg'], true);
+        if ($ext === 'dwg') {
+            return null;
+        }
+
+        $mime = (string) $file->getMimeType();
+        $expected = [
+            'pdf' => ['application/pdf'],
+            'jpg' => ['image/jpeg'],
+            'jpeg' => ['image/jpeg'],
+            'png' => ['image/png'],
+            'webp' => ['image/webp'],
+        ];
+        if (! in_array($mime, $expected[$ext] ?? [], true)) {
+            return 'The attachment file type is invalid.';
+        }
+
+        return null;
     }
 
     private function listPayload(Order $order): array
@@ -198,7 +241,7 @@ class OrderController extends Controller
             'phone' => $order->phone,
             'address' => $order->address,
             'comment' => $order->comment,
-            'attachment_url' => $order->attachment_url,
+            'attachment_url' => $this->attachmentUrl($order, false),
             'items' => $order->items->map(fn ($item) => [
                 'product_id' => $item->product_id,
                 'product_code' => $item->product_code,

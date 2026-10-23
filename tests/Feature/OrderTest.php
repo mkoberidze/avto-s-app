@@ -39,6 +39,7 @@ class OrderTest extends TestCase
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
         Storage::fake('public');
+        Storage::fake('local');
     }
 
     public function test_guest_gets_401_on_orders(): void
@@ -50,6 +51,7 @@ class OrderTest extends TestCase
         ], ['Accept' => 'application/json'])->assertUnauthorized();
 
         $this->getJson('/api/orders')->assertUnauthorized();
+        $this->getJson('/api/orders/1/attachment')->assertUnauthorized();
     }
 
     public function test_total_is_computed_server_side_and_client_price_is_ignored(): void
@@ -199,6 +201,13 @@ class OrderTest extends TestCase
             'attachment' => UploadedFile::fake()->create('huge.pdf', 20481, 'application/pdf'),
         ], ['Accept' => 'application/json'])->assertStatus(422);
 
+        $this->post('/api/orders', [
+            'customer_name' => 'Nika',
+            'address' => 'Tbilisi',
+            'items' => [['product_id' => 101, 'quantity' => 1]],
+            'attachment' => UploadedFile::fake()->create('plan.pdf', 20, 'text/plain'),
+        ], ['Accept' => 'application/json'])->assertStatus(422);
+
         $ok = $this->post('/api/orders', [
             'customer_name' => 'Nika',
             'address' => 'Tbilisi',
@@ -210,10 +219,68 @@ class OrderTest extends TestCase
 
         $detail = $this->getJson('/api/orders/'.$ok->json('id'))->assertOk();
         $this->assertNotEmpty($detail->json('attachment_url'));
+        $this->assertStringContainsString('/api/orders/'.$ok->json('id').'/attachment', $detail->json('attachment_url'));
         $this->assertSame('Tbilisi', $detail->json('address'));
         $this->assertSame('please call', $detail->json('comment'));
         $this->assertArrayNotHasKey('language', $detail->json());
         $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('orders', 'language'));
+
+        $order = Order::query()->find($ok->json('id'));
+        $this->assertNotEmpty($order->attachment_path);
+        $this->assertSame('plan.pdf', $order->attachment_name);
+        Storage::disk('local')->assertExists($order->attachment_path);
+        Storage::disk('public')->assertMissing($order->attachment_path);
+        $this->assertContains($this->get('/storage/'.$order->attachment_path)->status(), [403, 404]);
+    }
+
+    public function test_attachment_download_auth(): void
+    {
+        $this->getJson('/api/orders/1/attachment')->assertUnauthorized();
+        $this->getJson('/api/admin/orders/1/attachment')->assertUnauthorized();
+
+        $this->syncFeed();
+        $owner = $this->user();
+        Sanctum::actingAs($owner);
+        $id = $this->post('/api/orders', [
+            'customer_name' => 'Nika',
+            'address' => 'Tbilisi',
+            'items' => [['product_id' => 101, 'quantity' => 1]],
+            'attachment' => UploadedFile::fake()->create('plan.pdf', 100, 'application/pdf'),
+        ], ['Accept' => 'application/json'])->assertCreated()->json('id');
+
+        $this->get('/api/orders/'.$id.'/attachment')->assertOk();
+
+        $other = User::factory()->create(['phone' => '+995555000019']);
+        $other->assignRole('user');
+        Sanctum::actingAs($other);
+        $this->get('/api/orders/'.$id.'/attachment')->assertNotFound();
+
+        $admin = User::factory()->create(['phone' => '+995555000018']);
+        $admin->assignRole('admin');
+        Sanctum::actingAs($admin);
+        $this->get('/api/admin/orders/'.$id.'/attachment')->assertOk();
+    }
+
+    public function test_legacy_public_attachment_is_served_privately(): void
+    {
+        $this->syncFeed();
+        Storage::disk('public')->put('attachments/old.pdf', 'pdf-bytes');
+        $owner = $this->user();
+        $order = Order::query()->create([
+            'user_id' => $owner->id,
+            'status' => 'new',
+            'customer_name' => 'Nika',
+            'phone' => $owner->phone,
+            'address' => 'Tbilisi',
+            'comment' => null,
+            'attachment_url' => '/storage/attachments/old.pdf',
+            'attachment_path' => null,
+            'total' => 10,
+            'client_token' => null,
+        ]);
+
+        Sanctum::actingAs($owner);
+        $this->get('/api/orders/'.$order->id.'/attachment')->assertOk();
     }
 
     public function test_sms_failure_still_creates_order(): void

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useBlocker, useParams } from 'react-router-dom';
 import { getAdminOrder, updateAdminOrder } from '../../api/admin.js';
+import { downloadAuthorized } from '../../lib/downloadAuth.js';
 import { useI18n } from '../../contexts/i18n.js';
 import { Button, formatPrice } from '../storefront/ui.jsx';
 import { ORDER_STATUSES, formatAdminDate, statusClass } from './status.js';
@@ -156,7 +157,13 @@ export default function OrderDetailSection() {
                         {order.comment ? <p className="mt-2 text-sm text-muted">{t('checkout.comment')}: {order.comment}</p> : null}
                         {order.attachment_url ? (
                             <p className="mt-2 text-sm">
-                                <a href={order.attachment_url} target="_blank" rel="noreferrer" className="font-bold text-accent">{t('admin.attachment')} · {t('admin.download')}</a>
+                                <button
+                                    type="button"
+                                    onClick={() => downloadAuthorized(order.attachment_url, t('admin.attachment')).catch(() => flash(t('admin.failed'), true))}
+                                    className="font-bold text-accent"
+                                >
+                                    {t('admin.attachment')} · {t('admin.download')}
+                                </button>
                             </p>
                         ) : null}
                         <p className="mt-4 text-xs text-muted">{t('admin.created')}: {formatAdminDate(order.created_at)}</p>
