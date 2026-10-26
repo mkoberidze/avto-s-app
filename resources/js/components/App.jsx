@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext.jsx';
 import { CartProvider } from '../contexts/CartContext.jsx';
 import StorefrontLayout from './storefront/StorefrontLayout.jsx';
@@ -17,41 +17,42 @@ import AdminLayout from './admin/AdminLayout.jsx';
 import AdminPage from './admin/AdminPage.jsx';
 import OrderDetailSection from './admin/OrderDetailSection.jsx';
 
-function AppShell() {
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/forms" element={<Navigate to="/" replace />} />
-                <Route path="/forms/*" element={<Navigate to="/" replace />} />
-                <Route path="/services" element={<Navigate to="/" replace />} />
-                <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="orders/:id" element={<OrderDetailSection />} />
-                    <Route path=":section" element={<AdminPage />} />
-                </Route>
-                <Route element={<StorefrontLayout />}>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/products" element={<CatalogPage />} />
-                    <Route path="/products/category/:id" element={<CatalogPage />} />
-                    <Route path="/products/:id" element={<ProductPage />} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/account" element={<AccountPage />} />
-                    <Route path="/about" element={<AboutStorePage />} />
-                    <Route path="/contact" element={<ContactPage />} />
-                    <Route path="*" element={<NotFoundPage />} />
-                </Route>
-            </Routes>
-        </BrowserRouter>
-    );
-}
+const router = createBrowserRouter([
+    { path: '/forms', element: <Navigate to="/" replace /> },
+    { path: '/forms/*', element: <Navigate to="/" replace /> },
+    { path: '/services', element: <Navigate to="/" replace /> },
+    {
+        path: '/admin',
+        element: <AdminLayout />,
+        children: [
+            { index: true, element: <Navigate to="dashboard" replace /> },
+            { path: 'orders/:id', element: <OrderDetailSection /> },
+            { path: ':section', element: <AdminPage /> },
+        ],
+    },
+    {
+        element: <StorefrontLayout />,
+        children: [
+            { path: '/', element: <HomePage /> },
+            { path: '/products', element: <CatalogPage /> },
+            { path: '/products/category/:id', element: <CatalogPage /> },
+            { path: '/products/:id', element: <ProductPage /> },
+            { path: '/cart', element: <CartPage /> },
+            { path: '/checkout', element: <CheckoutPage /> },
+            { path: '/login', element: <LoginPage /> },
+            { path: '/account', element: <AccountPage /> },
+            { path: '/about', element: <AboutStorePage /> },
+            { path: '/contact', element: <ContactPage /> },
+            { path: '*', element: <NotFoundPage /> },
+        ],
+    },
+]);
 
 export default function App() {
     return (
         <AuthProvider>
             <CartProvider>
-                <AppShell />
+                <RouterProvider router={router} />
             </CartProvider>
         </AuthProvider>
     );

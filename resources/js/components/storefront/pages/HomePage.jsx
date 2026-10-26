@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight, Headphones, PackageCheck, ShieldCheck, Wrench } from 'lucide-react';
 import { getProducts } from '../../../api/catalog.js';
 import { useI18n } from '../../../contexts/i18n.js';
-import { useStorefrontData } from '../StorefrontData.jsx';
+import { navCategoryRoots, useStorefrontData } from '../StorefrontData.jsx';
 import { ProductCard, ProductSkeleton } from '../ui.jsx';
 
 export default function HomePage() {
@@ -13,10 +13,7 @@ export default function HomePage() {
     const [loading, setLoading] = useState(true);
     const images = (settings.carousel_images || []).filter(Boolean);
 
-    const tiles = categories
-        .filter((c) => c.parent_id == null && c.nav_order != null)
-        .slice()
-        .sort((a, b) => a.nav_order - b.nav_order);
+    const tiles = navCategoryRoots(categories);
 
     useEffect(() => {
         let cancelled = false;

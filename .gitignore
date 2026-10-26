@@ -20,6 +20,8 @@
 /storage/app/feed/
 /storage/pail
 /vendor
+/schema.sql
+/schema.sql.gz
 Homestead.json
 Homestead.yaml
 Thumbs.db

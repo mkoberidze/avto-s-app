@@ -36,6 +36,11 @@ return [
     ],
     'sms_driver' => env('SMS_DRIVER', 'ubill'),
 
+    'sms_notify_phones' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('SMS_NOTIFY_PHONES', '+995599677003'))
+    ))),
+
     'ubill' => [
         'api_key' => env('UBILL_API_KEY'),
         'brand_id' => env('UBILL_BRAND_ID'),

@@ -40,7 +40,7 @@ class CatalogController extends Controller
                 'nav_order' => $category->nav_order,
                 'product_count' => $total,
             ];
-        })->values();
+        })->filter(fn (array $row) => $row['product_count'] > 0)->values();
 
         return response()->json($payload);
     }
@@ -109,6 +109,7 @@ class CatalogController extends Controller
             $query->where('is_featured', true);
         }
 
+        $query->orderByDesc('in_stock');
         $sort = (string) $request->query('sort', 'newest');
         match ($sort) {
             'priceAsc' => $query->orderBy('price')->orderBy('id'),

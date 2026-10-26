@@ -28,6 +28,9 @@ class CatalogFeed
             ['category_id' => '61', 'parent_id' => '0', 'category' => 'დაცვითი სიგნალიზაცია'],
             ['category_id' => '155', 'parent_id' => '0', 'category' => 'AJAX'],
             ['category_id' => '888', 'parent_id' => '777', 'category' => 'ორფანი'],
+            ['category_id' => '999', 'parent_id' => '32', 'category' => 'ცარიელი ფოთოლი'],
+            ['category_id' => '152', 'parent_id' => '0', 'category' => 'სახანძრო პანელი'],
+            ['category_id' => '180', 'parent_id' => '0', 'category' => 'სახანძრო პანელები'],
         ];
     }
 

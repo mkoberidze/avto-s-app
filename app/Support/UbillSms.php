@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -55,10 +56,30 @@ class UbillSms
 
     public function notifyAdmins(string $message): void
     {
+        $phones = [];
         foreach (User::role('admin')->get() as $admin) {
             if ($admin->phone) {
-                $this->sendIfConfigured($admin->phone, $message);
+                $phones[] = $admin->phone;
             }
+        }
+        foreach ((array) config('services.sms_notify_phones', []) as $extra) {
+            if (is_string($extra) && $extra !== '') {
+                $phones[] = $extra;
+            }
+        }
+        $shopPhone = Setting::get('phone');
+        if (is_string($shopPhone) && $shopPhone !== '') {
+            $phones[] = $shopPhone;
+        }
+
+        $seen = [];
+        foreach ($phones as $phone) {
+            $normalized = GeorgianPhone::normalize($phone);
+            if ($normalized === '' || isset($seen[$normalized]) || ! GeorgianPhone::isValid($normalized)) {
+                continue;
+            }
+            $seen[$normalized] = true;
+            $this->sendIfConfigured($normalized, $message);
         }
     }
 

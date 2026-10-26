@@ -6,6 +6,10 @@ return [
     'brand_feature_key' => 'ბრენდი',
     'timeout' => (int) env('NEOTECH_TIMEOUT', 60),
     'nav_featured_ids' => [32, 77, 66, 61, 155, 103, 85, 70],
+    'category_parent_overrides' => [
+        152 => 77,
+        180 => 77,
+    ],
     'category_fallbacks' => [
         115 => 77,
         116 => 77,

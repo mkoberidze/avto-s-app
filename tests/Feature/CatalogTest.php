@@ -142,19 +142,18 @@ class CatalogTest extends TestCase
 
         $newest = $this->getJson('/api/products?sort=newest&per_page=60')->json('products');
         $this->assertSame('112', $newest[0]['id']);
+        $this->assertTrue($newest[0]['in_stock']);
+        $this->assertSame('107', collect($newest)->last()['id']);
+        $this->assertFalse(collect($newest)->last()['in_stock']);
 
-        $priceAsc = collect($this->getJson('/api/products?sort=priceAsc&per_page=60')->json('products'))->pluck('price')->all();
-        $sorted = $priceAsc;
-        sort($sorted);
-        $this->assertSame($sorted, $priceAsc);
+        $priceAsc = $this->getJson('/api/products?sort=priceAsc&per_page=60')->json('products');
+        $this->assertStockThen($priceAsc, fn ($row) => $row['price']);
 
         $priceDesc = collect($this->getJson('/api/products?sort=priceDesc&per_page=60')->json('products'))->pluck('price')->all();
         $this->assertEquals(1000, $priceDesc[0]);
 
-        $names = collect($this->getJson('/api/products?sort=name&per_page=60')->json('products'))->pluck('name')->all();
-        $sortedNames = $names;
-        sort($sortedNames, SORT_STRING);
-        $this->assertSame($sortedNames, $names);
+        $named = $this->getJson('/api/products?sort=name&per_page=60')->json('products');
+        $this->assertStockThen($named, fn ($row) => $row['name']);
 
         $hikvision = $this->getJson('/api/products?brand[]=Hikvision&per_page=60')->json();
         $this->assertSame(4, $hikvision['total']);
@@ -204,7 +203,30 @@ class CatalogTest extends TestCase
 
         $categoryIds = collect($this->getJson('/api/categories')->json())->pluck('id');
         $this->assertFalse($categoryIds->contains('155'));
+        $this->assertFalse($categoryIds->contains('999'));
         $this->assertTrue($categoryIds->contains('32'));
+    }
+
+    public function test_empty_categories_are_omitted_from_public_api(): void
+    {
+        $this->fakeFeed();
+        $this->artisan('catalog:sync')->assertSuccessful();
+
+        $ids = collect($this->getJson('/api/categories')->json())->pluck('id');
+        $this->assertFalse($ids->contains('999'));
+        $this->assertFalse($ids->contains('152'));
+        $this->assertTrue($ids->contains('32'));
+        $this->assertTrue($ids->contains('77'));
+    }
+
+    public function test_category_parent_overrides_nest_stray_roots(): void
+    {
+        $this->fakeFeed();
+        $this->artisan('catalog:sync')->assertSuccessful();
+
+        $this->assertSame(77, (int) Category::query()->find(152)->parent_id);
+        $this->assertSame(77, (int) Category::query()->find(180)->parent_id);
+        $this->assertNull(Category::query()->find(32)->parent_id);
     }
 
     public function test_sync_from_local_file_path(): void
@@ -223,7 +245,7 @@ class CatalogTest extends TestCase
 
         $this->artisan('catalog:sync')->assertSuccessful();
 
-        $this->assertSame(8, Category::query()->count());
+        $this->assertSame(11, Category::query()->count());
         $this->assertSame(12, Product::query()->count());
         Http::assertNothingSent();
 
@@ -262,11 +284,15 @@ class CatalogTest extends TestCase
         $this->assertSame(0, $this->getJson('/api/products?featured=1')->json('total'));
 
         Product::query()->whereKey(101)->update(['is_featured' => true]);
+        Product::query()->whereKey(107)->update(['is_featured' => true]);
         Product::query()->whereKey(102)->update(['is_featured' => true, 'is_hidden' => true]);
 
         $payload = $this->getJson('/api/products?featured=1')->json();
-        $this->assertSame(1, $payload['total']);
+        $this->assertSame(2, $payload['total']);
         $this->assertSame('101', $payload['products'][0]['id']);
+        $this->assertTrue($payload['products'][0]['in_stock']);
+        $this->assertSame('107', $payload['products'][1]['id']);
+        $this->assertFalse($payload['products'][1]['in_stock']);
     }
 
     public function test_html_in_descriptions_is_sanitized_on_output(): void
@@ -317,5 +343,34 @@ class CatalogTest extends TestCase
             CatalogFeed::categoriesUrl() => Http::response(CatalogFeed::categories()),
             CatalogFeed::productsUrl() => Http::response(CatalogFeed::products()),
         ]);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $products
+     */
+    private function assertStockThen(array $products, callable $key): void
+    {
+        $inStock = [];
+        $outOfStock = [];
+        $seenOutOfStock = false;
+
+        foreach ($products as $product) {
+            if ($product['in_stock']) {
+                $this->assertFalse($seenOutOfStock, 'Out-of-stock products must come after in-stock products');
+                $inStock[] = $key($product);
+            } else {
+                $seenOutOfStock = true;
+                $outOfStock[] = $key($product);
+            }
+        }
+
+        $sortedInStock = $inStock;
+        $sortedOutOfStock = $outOfStock;
+        $flags = is_numeric($inStock[0] ?? $outOfStock[0] ?? null) ? SORT_NUMERIC : SORT_STRING;
+        sort($sortedInStock, $flags);
+        sort($sortedOutOfStock, $flags);
+
+        $this->assertSame($sortedInStock, $inStock);
+        $this->assertSame($sortedOutOfStock, $outOfStock);
     }
 }

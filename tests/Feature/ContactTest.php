@@ -6,6 +6,7 @@ use App\Models\ContactMessage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
@@ -90,6 +91,33 @@ class ContactTest extends TestCase
         $this->postJson('/api/contact', $payload)->assertCreated();
         $this->postJson('/api/contact', $payload)->assertCreated();
         $this->postJson('/api/contact', $payload)->assertStatus(429);
+    }
+
+    public function test_contact_sms_goes_to_admin_and_shop_phone(): void
+    {
+        config([
+            'services.sms_driver' => 'log',
+            'services.sms_notify_phones' => ['+995 599 677 003'],
+        ]);
+        $admin = User::factory()->create(['phone' => '+995555000001']);
+        $admin->assignRole('admin');
+
+        $phones = [];
+        Log::listen(function ($event) use (&$phones) {
+            if ($event->message === 'SMS') {
+                $phones[] = $event->context['phone'] ?? null;
+            }
+        });
+
+        $this->postJson('/api/contact', [
+            'name' => 'Goga',
+            'phone' => '+995555333002',
+            'message' => 'hello there friends',
+        ])->assertCreated();
+
+        $this->assertContains('+995555000001', $phones);
+        $this->assertContains('+995599677003', $phones);
+        $this->assertCount(2, array_unique($phones));
     }
 
     public function test_sms_failure_does_not_fail_request(): void

@@ -28,6 +28,13 @@ export function categoryRoots(categories) {
     return categories.filter((c) => c.parent_id == null);
 }
 
+export function navCategoryRoots(categories) {
+    return categories
+        .filter((c) => c.parent_id == null && c.nav_order != null)
+        .slice()
+        .sort((a, b) => Number(a.nav_order) - Number(b.nav_order));
+}
+
 export function childrenOf(categories, parentId) {
     return categories.filter((c) => String(c.parent_id) === String(parentId));
 }

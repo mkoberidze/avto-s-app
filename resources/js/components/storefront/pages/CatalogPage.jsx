@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Filter, Search, SlidersHorizontal, X } from 'lucide-react';
 import { getBrands, getProducts } from '../../../api/catalog.js';
 import { useI18n } from '../../../contexts/i18n.js';
-import { childrenOf, categoryRoots, useStorefrontData } from '../StorefrontData.jsx';
+import { childrenOf, categoryRoots, navCategoryRoots, useStorefrontData } from '../StorefrontData.jsx';
 import { Button, EmptyState, ProductCard, ProductSkeleton } from '../ui.jsx';
 
 const PER_PAGE = 24;
@@ -311,7 +311,10 @@ function Filters({ t, categories, categoryId, brands, selectedBrands, minPrice, 
 }
 
 function CategoryTree({ t, categories, activeId, onSelect }) {
-    const roots = useMemo(() => categoryRoots(categories), [categories]);
+    const roots = useMemo(() => {
+        const featured = navCategoryRoots(categories);
+        return featured.length ? featured : categoryRoots(categories);
+    }, [categories]);
     const [open, setOpen] = useState(() => new Set(activeId ? [String(activeId)] : []));
 
     return (

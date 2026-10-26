@@ -35,7 +35,7 @@ export default function AdminLayout() {
             {sidebar ? <button type="button" onClick={() => setSidebar(false)} aria-label={t('common.close')} className="fixed inset-0 z-40 bg-navy/50 lg:hidden" /> : null}
             <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-navy text-white transition-transform lg:translate-x-0 ${sidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-                    <Link to="/admin/dashboard" onClick={() => setSidebar(false)} className="flex items-center gap-3">
+                    <Link to="/" onClick={() => setSidebar(false)} className="flex items-center gap-3" aria-label={t('nav.home')}>
                         <span className="grid size-10 place-items-center rounded-xl bg-accent"><ShieldCheck size={22} /></span>
                         <span>
                             <strong className="block tracking-widest">SENTRA</strong>

@@ -34,14 +34,21 @@ class SyncCatalog extends Command
         }
 
         $categoryRows = [];
+        $overrides = config('catalog.category_parent_overrides', []);
         foreach ($categoriesPayload as $item) {
             if (! is_array($item) || ! isset($item['category_id'])) {
                 continue;
             }
+            $id = (int) $item['category_id'];
             $parentId = (string) ($item['parent_id'] ?? '0');
+            $parent = $parentId === '0' || $parentId === '' ? null : (int) $parentId;
+            if (array_key_exists($id, $overrides)) {
+                $mapped = $overrides[$id];
+                $parent = $mapped === null || $mapped === 0 || $mapped === '0' ? null : (int) $mapped;
+            }
             $categoryRows[] = [
-                'id' => (int) $item['category_id'],
-                'parent_id' => $parentId === '0' || $parentId === '' ? null : (int) $parentId,
+                'id' => $id,
+                'parent_id' => $parent,
                 'name_ka' => (string) ($item['category'] ?? ''),
                 'synced_at' => $startedAt,
                 'updated_at' => $startedAt,

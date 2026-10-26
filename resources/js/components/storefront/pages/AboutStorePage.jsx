@@ -19,7 +19,7 @@ export default function AboutStorePage() {
                     <p className="mt-6 text-lg leading-8 text-muted">{t('about.body')}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    {[['15+', 'about.stat_warranty'], ['500+', 'about.stat_projects'], ['24/7', 'about.stat_support'], ['8', 'about.stat_categories']].map(([n, key]) => (
+                    {[['15+', 'about.stat_warranty'], ['100+', 'about.stat_projects'], ['24/7', 'about.stat_support'], ['8', 'about.stat_categories']].map(([n, key]) => (
                         <div key={key} className="rounded-xl border border-line bg-surface p-6">
                             <strong className="text-3xl font-black text-navy">{n}</strong>
                             <p className="mt-2 text-sm text-muted">{t(key)}</p>
