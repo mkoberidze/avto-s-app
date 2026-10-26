@@ -29,12 +29,12 @@ jobs:
           npm ci
           npm run build
 
-      # Upload Laravel application files.
+      # Upload Laravel application files, preserving production-only files.
       - name: Deploy Laravel application
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           port: 21
@@ -58,12 +58,13 @@ jobs:
             **/.idea/**
             **/.vscode/**
 
-      # Upload public files and compiled Vite assets.
+      # Upload public files and compiled Vite assets, but preserve the custom
+      # production index.php that points Laravel at the separate app directory.
       - name: Deploy public files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           port: 21
