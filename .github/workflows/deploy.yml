@@ -1,72 +1,88 @@
-name: Build release package
+name: Deploy SENTRA
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
+concurrency:
+  group: sentra-production-deploy
+  cancel-in-progress: false
+
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: mbstring, bcmath, pdo_mysql, curl, dom, fileinfo, xml
-          coverage: none
-
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction
-
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: 22
           cache: npm
 
-      - name: Install Node dependencies
-        run: npm ci
-
       - name: Build frontend
-        run: npm run build
-
-      - name: Prepare release folders
         run: |
-          mkdir -p deploy/laravel
-          mkdir -p deploy/public_html
+          npm ci
+          npm run build
 
-          rsync -a \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='.env' \
-            --exclude='node_modules/' \
-            --exclude='tests/' \
-            --exclude='docker-compose.yml' \
-            --exclude='public/build/' \
-            --exclude='public/hot' \
-            --exclude='storage/logs/' \
-            --exclude='storage/framework/cache/' \
-            --exclude='storage/framework/sessions/' \
-            --exclude='storage/framework/views/' \
-            --exclude='deploy/' \
-            ./ deploy/laravel/
-
-          cp -a public/. deploy/public_html/
-
-      - name: Create zip files
-        run: |
-          (cd deploy/laravel && zip -rq ../../laravel.zip .)
-          (cd deploy/public_html && zip -rq ../../public_html.zip .)
-          ls -lh laravel.zip public_html.zip
-
-      - name: Upload release artifact
-        uses: actions/upload-artifact@v4
+      # Upload Laravel application files.
+      - name: Deploy Laravel application
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          name: sentra-release
-          path: |
-            laravel.zip
-            public_html.zip
-          retention-days: 7
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./
+          server-dir: laravel/
+          state-name: .ftp-deploy-laravel-state.json
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/vendor/**
+            **/storage/**
+            **/.env
+            **/.env.*
+            **/public/**
+            **/deploy/**
+            **/out/**
+            **/tests/**
+            **/coverage/**
+            **/.idea/**
+            **/.vscode/**
+
+      # Upload public files and compiled Vite assets.
+      - name: Deploy public files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./public/
+          server-dir: sentra.ge/public_html/
+          state-name: .ftp-deploy-public-state.json
+          dangerous-clean-slate: false
+          exclude: |
+            index.php
+            hot
+            .env
+            .env.*
+            **/.git*
+            **/node_modules/**
+
+      - name: Verify production homepage
+        run: |
+          set -eu
+          html="$(curl --fail --silent --show-error \
+            --retry 3 --retry-delay 5 https://sentra.ge/)"
+          echo "$html" | grep -Eq 'build/assets/[^"]+\.js'
+          echo "Deployment verified: homepage includes a JavaScript bundle."
