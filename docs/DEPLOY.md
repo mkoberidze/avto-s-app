@@ -20,7 +20,7 @@ If you deploy by hand instead of the workflow, still run `npm run build` locally
 
 Confirm on the host: PHP **8.2+**, extensions `pdo_mysql`, `mbstring`, `openssl`, `curl`, `dom`, `fileinfo`, `json`, `ctype`, `xml`, and that the domain’s document root points at **`…/public`** (or the uploaded `public_html` that already is that document root).
 
-1. Copy `.env.production.example` to `.env` on the server. Fill `APP_URL`, MySQL keys, `UBILL_*`, `ADMIN_PHONE`, `ADMIN_PASSWORD`. No sample secrets are in the template.
+1. Copy `.env.production.example` to `.env` on the server. Fill `APP_URL`, MySQL keys, `UBILL_*`, `ADMIN_PHONE`, `ADMIN_PASSWORD`, `ADMIN_PHONES`. No sample secrets are in the template.
 2. From the Laravel root (the `laravel/` directory if using the FTP layout):
 
 ```bash
@@ -29,7 +29,7 @@ php artisan migrate --force
 php artisan db:seed --force
 ```
 
-`db:seed` creates the admin user from `ADMIN_PHONE` / `ADMIN_PASSWORD`.
+`db:seed` creates admin users from `ADMIN_PHONE`, `ADMIN_PHONES`, and `ADMIN_PASSWORD`. Extra shop-contact admins also get the role on OTP login.
 
 3. Storage link:
 

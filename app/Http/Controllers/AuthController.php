@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\AdminPhones;
 use App\Support\GeorgianPhone;
 use App\Support\UbillSms;
 use Ichtrojan\Otp\Models\Otp as OtpModel;
@@ -24,9 +25,7 @@ class AuthController extends Controller
 
     private function isAdminPhone(string $phone): bool
     {
-        $adminPhone = GeorgianPhone::normalize((string) config('admin.phone'));
-
-        return $adminPhone !== '' && hash_equals($adminPhone, $phone);
+        return AdminPhones::contains($phone);
     }
 
     private function matchesAdminOtp(string $phone, string $code): bool

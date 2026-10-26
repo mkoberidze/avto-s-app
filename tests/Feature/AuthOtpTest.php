@@ -288,6 +288,7 @@ class AuthOtpTest extends TestCase
     {
         config([
             'admin.phone' => '995555000024',
+            'admin.phones' => [],
             'admin.password' => 'secret',
         ]);
 
@@ -296,6 +297,38 @@ class AuthOtpTest extends TestCase
         $admin = User::query()->where('phone', '+995555000024')->first();
         $this->assertNotNull($admin);
         $this->assertTrue($admin->hasRole('admin'));
+    }
+
+    public function test_otp_login_grants_admin_to_extra_admin_phone(): void
+    {
+        config([
+            'admin.phone' => '+995555000026',
+            'admin.phones' => ['+995599677003'],
+        ]);
+
+        $user = User::factory()->create(['phone' => '+995599677003']);
+        $user->assignRole('user');
+        $otp = (new Otp())->generate('+995599677003', 'numeric', 6, 10);
+
+        $this->postJson('/api/auth/otp/verify', [
+            'phone' => '+995 599 677 003',
+            'otp' => $otp->token,
+        ])->assertOk()->assertJsonPath('user.role', 'admin');
+    }
+
+    public function test_seeder_promotes_extra_admin_phones(): void
+    {
+        config([
+            'admin.phone' => '+995555000027',
+            'admin.phones' => ['995 599 677 003'],
+            'admin.password' => 'secret',
+        ]);
+
+        $this->seed(DatabaseSeeder::class);
+
+        $shop = User::query()->where('phone', '+995599677003')->first();
+        $this->assertNotNull($shop);
+        $this->assertTrue($shop->hasRole('admin'));
     }
 
     public function test_sms_ubill_driver_calls_network(): void

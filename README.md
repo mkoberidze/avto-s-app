@@ -23,6 +23,7 @@ Set in `.env`:
 
 - `SMS_DRIVER=log` — OTP and admin SMS go to the log; no ubill network
 - `ADMIN_PHONE` / `ADMIN_PASSWORD` — `db:seed` creates that admin user
+- `ADMIN_PHONES` — extra admin mobiles (default shop contact `+995599677003`)
 - Optional local feed snapshots:
 
 ```
