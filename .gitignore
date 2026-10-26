@@ -27,3 +27,4 @@ Homestead.yaml
 Thumbs.db
 /figma make folder/
 .figma/
+docker-compose.yml

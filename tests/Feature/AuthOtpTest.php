@@ -255,6 +255,23 @@ class AuthOtpTest extends TestCase
         ])->assertStatus(422);
     }
 
+    public function test_otp_login_does_not_collide_when_same_phone_exists_in_two_formats(): void
+    {
+        $older = User::factory()->create(['phone' => '995555000025']);
+        $older->assignRole('user');
+        $canonical = User::factory()->create(['phone' => '+995555000025']);
+        $canonical->assignRole('user');
+        $otp = (new Otp())->generate('+995555000025', 'numeric', 6, 10);
+
+        $this->postJson('/api/auth/otp/verify', [
+            'phone' => '+995555000025',
+            'otp' => $otp->token,
+        ])->assertOk()->assertJsonPath('user.id', $canonical->id)->assertJsonPath('user.phone', '+995555000025');
+
+        $this->assertSame('995555000025', $older->fresh()->phone);
+        $this->assertSame('+995555000025', $canonical->fresh()->phone);
+    }
+
     public function test_otp_login_finds_admin_when_stored_phone_lacks_plus(): void
     {
         $admin = User::factory()->create(['phone' => '995555000023']);

@@ -7,6 +7,7 @@ use App\Support\GeorgianPhone;
 use App\Support\UbillSms;
 use Ichtrojan\Otp\Models\Otp as OtpModel;
 use Ichtrojan\Otp\Otp;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -40,19 +41,40 @@ class AuthController extends Controller
     private function findOrCreateUser(string $phone): User
     {
         $matches = User::query()->whereIn('phone', GeorgianPhone::variants($phone))->get();
-        $user = $matches->first(fn (User $candidate) => $candidate->hasRole('admin'))
+        $user = $matches->first(fn (User $candidate) => $candidate->phone === $phone)
+            ?? $matches->first(fn (User $candidate) => $candidate->hasRole('admin'))
             ?? $matches->first();
 
         if (! $user) {
-            $user = User::query()->create([
-                'phone' => $phone,
-                'name' => null,
-                'email' => $phone.'@example.local',
-                'password' => bcrypt(str()->random(32)),
-            ]);
-        } elseif ($user->phone !== $phone) {
-            $user->phone = $phone;
-            $user->save();
+            try {
+                return User::query()->create([
+                    'phone' => $phone,
+                    'name' => null,
+                    'email' => $phone.'@example.local',
+                    'password' => bcrypt(str()->random(32)),
+                ]);
+            } catch (UniqueConstraintViolationException $e) {
+                $existing = User::query()->where('phone', $phone)->first();
+                if ($existing) {
+                    return $existing;
+                }
+
+                throw $e;
+            }
+        }
+
+        if ($user->phone !== $phone && ! User::query()->where('phone', $phone)->whereKeyNot($user->id)->exists()) {
+            try {
+                $user->phone = $phone;
+                $user->save();
+            } catch (UniqueConstraintViolationException $e) {
+                $canonical = User::query()->where('phone', $phone)->first();
+                if ($canonical) {
+                    return $canonical;
+                }
+
+                throw $e;
+            }
         }
 
         return $user;

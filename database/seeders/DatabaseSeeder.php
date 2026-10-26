@@ -33,7 +33,8 @@ class DatabaseSeeder extends Seeder
                 'email' => $adminPhone.'@example.local',
                 'password' => Hash::make($adminPassword),
             ]);
-        } elseif ($admin->phone !== $adminPhone) {
+        } elseif ($admin->phone !== $adminPhone
+            && ! User::query()->where('phone', $adminPhone)->whereKeyNot($admin->id)->exists()) {
             $admin->phone = $adminPhone;
             $admin->save();
         }
