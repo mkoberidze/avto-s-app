@@ -5,7 +5,7 @@ import { getProduct, getProducts } from '../../../api/catalog.js';
 import { useI18n } from '../../../contexts/i18n.js';
 import { useCart } from '../../../contexts/CartContext.jsx';
 import { categoryChain, useStorefrontData } from '../StorefrontData.jsx';
-import { Button, EmptyState, Price, ProductCard, ProductSkeleton, QuantityStepper, StockBadge, ProductImage } from '../ui.jsx';
+import { Button, EmptyState, Price, ProductCard, ProductSkeleton, QuantityStepper, StockBadge, ProductImage, isPurchasable } from '../ui.jsx';
 
 export default function ProductPage() {
     const { id } = useParams();
@@ -121,14 +121,18 @@ export default function ProductPage() {
                         <StockBadge product={product} />
                     </div>
                     <div className="my-7 border-y border-line py-6">
-                        <Price value={product.price} size="large" />
+                        <Price value={product.price} size="large" onRequest={product.price_on_request} />
                     </div>
                     <label className="mb-3 block text-sm font-bold text-navy">{t('product.qty')}</label>
                     <div className="flex flex-wrap gap-3">
-                        <QuantityStepper value={qty} onChange={setQty} disabled={!product.in_stock} />
-                        <Button disabled={!product.in_stock} onClick={() => addItem(product, qty)} className="flex-1 sm:flex-none">
+                        <QuantityStepper value={qty} onChange={setQty} disabled={!isPurchasable(product)} />
+                        <Button disabled={!isPurchasable(product)} onClick={() => addItem(product, qty)} className="flex-1 sm:flex-none">
                             <ShoppingCart size={18} />
-                            {product.in_stock ? t('product.add_to_cart') : t('product.out_of_stock')}
+                            {isPurchasable(product)
+                                ? t('product.add_to_cart')
+                                : product.in_stock
+                                    ? t('product.price_on_request')
+                                    : t('product.out_of_stock')}
                         </Button>
                     </div>
                 </div>

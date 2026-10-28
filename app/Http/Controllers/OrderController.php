@@ -115,6 +115,11 @@ class OrderController extends Controller
 
                 continue;
             }
+            if (! $product->isPriced()) {
+                $unavailable[] = ['product_id' => (string) $productId, 'reason' => 'price_on_request'];
+
+                continue;
+            }
             $price = (string) $product->price;
             $snapshots[] = [
                 'product_id' => $product->id,

@@ -33,6 +33,11 @@ class Product extends Model
         return $query->where('in_feed', true)->where('is_hidden', false);
     }
 
+    public function isPriced(): bool
+    {
+        return (float) $this->price > 0;
+    }
+
     public static function plainText(?string $html): string
     {
         if ($html === null || $html === '') {

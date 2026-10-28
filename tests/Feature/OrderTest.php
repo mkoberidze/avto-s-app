@@ -103,6 +103,25 @@ class OrderTest extends TestCase
         $this->assertSame(0, Order::query()->count());
     }
 
+    public function test_zero_price_in_stock_item_cannot_be_ordered(): void
+    {
+        $this->syncFeed();
+        Product::query()->whereKey(101)->update(['price' => 0, 'in_stock' => true]);
+        Sanctum::actingAs($this->user());
+
+        $res = $this->postJson('/api/orders', [
+            'customer_name' => 'Nika',
+            'address' => 'Tbilisi',
+            'items' => [
+                ['product_id' => 101, 'quantity' => 1],
+            ],
+        ])->assertStatus(422);
+
+        $this->assertSame('items_unavailable', $res->json('message'));
+        $this->assertSame('price_on_request', $res->json('items.0.reason'));
+        $this->assertSame(0, Order::query()->count());
+    }
+
     public function test_duplicate_lines_are_merged(): void
     {
         $this->syncFeed();

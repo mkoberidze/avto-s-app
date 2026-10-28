@@ -310,12 +310,28 @@ class CatalogTest extends TestCase
         $this->assertIsString($list['id']);
         $this->assertIsString($list['category_id']);
         $this->assertTrue(is_int($list['price']) || is_float($list['price']));
+        $this->assertFalse($list['price_on_request']);
         $this->assertIsBool($list['in_stock']);
         $this->assertSame('****', $this->getJson('/api/products/106')->json('stock_level'));
         $this->assertSame([], $this->getJson('/api/products/105')->json('features'));
         $this->assertSame('', $this->getJson('/api/products/104')->json('description'));
         $this->assertCount(1, $this->getJson('/api/products?q=CAM-101')->json('products.0.images'));
         $this->assertCount(2, $this->getJson('/api/products/101')->json('images'));
+    }
+
+    public function test_zero_feed_price_is_price_on_request(): void
+    {
+        $this->fakeFeed();
+        $this->artisan('catalog:sync')->assertSuccessful();
+        Product::query()->whereKey(101)->update(['price' => 0]);
+
+        $detail = $this->getJson('/api/products/101')->assertOk()->json();
+        $this->assertSame(0, $detail['price']);
+        $this->assertTrue($detail['price_on_request']);
+        $this->assertTrue($detail['in_stock']);
+
+        $list = collect($this->getJson('/api/products?q=CAM-101&per_page=60')->json('products'))->firstWhere('id', '101');
+        $this->assertTrue($list['price_on_request']);
     }
 
     public function test_language_query_is_ignored_and_returns_georgian(): void

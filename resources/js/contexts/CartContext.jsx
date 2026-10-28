@@ -45,6 +45,9 @@ export function CartProvider({ children }) {
     }, [items]);
 
     function addItem(product, quantity = 1) {
+        if (!product?.in_stock || !(Number(product.price) > 0) || product.price_on_request) {
+            return;
+        }
         const id = String(product.id);
         const qty = clampQty(quantity);
         setItems((prev) => {

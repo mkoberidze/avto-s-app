@@ -159,6 +159,7 @@ class CatalogController extends Controller
             'name' => $product->name_ka ?? '',
             'short_description' => Product::plainText($product->short_description_ka),
             'price' => (float) $product->price,
+            'price_on_request' => ! $product->isPriced(),
             'in_stock' => (bool) $product->in_stock,
             'stock_level' => $product->stock_level,
             'brand' => $product->brand,

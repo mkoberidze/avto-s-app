@@ -10,10 +10,28 @@ export function formatPrice(value) {
     return `${n.toFixed(2)} ₾`;
 }
 
-export function Price({ value, size = 'normal', className = '' }) {
+export function isPriceOnRequest(productOrPrice) {
+    if (productOrPrice && typeof productOrPrice === 'object') {
+        if (productOrPrice.price_on_request) return true;
+        return !(Number(productOrPrice.price) > 0);
+    }
+    return !(Number(productOrPrice) > 0);
+}
+
+export function isPurchasable(product) {
+    return Boolean(product?.in_stock) && !isPriceOnRequest(product);
+}
+
+export function Price({ value, size = 'normal', className = '', onRequest = false }) {
+    const t = useI18n();
+    const request = onRequest || isPriceOnRequest(value);
+    const classes = request
+        ? `min-w-0 font-medium leading-tight text-muted ${size === 'large' ? 'max-w-sm text-sm' : 'flex-1 text-[11px]'} ${className}`
+        : `font-bold tracking-tight text-navy ${size === 'large' ? 'text-3xl' : 'text-lg'} ${className}`;
+
     return (
-        <span className={`font-bold tracking-tight text-navy ${size === 'large' ? 'text-3xl' : 'text-lg'} ${className}`}>
-            {formatPrice(value)}
+        <span className={classes}>
+            {request ? t('catalog.price_on_request') : formatPrice(value)}
         </span>
     );
 }
@@ -109,7 +127,7 @@ export function ProductImage({ src, alt, className = '' }) {
 export function ProductCard({ product }) {
     const t = useI18n();
     const { addItem } = useCart();
-    const inStock = Boolean(product.in_stock);
+    const canBuy = isPurchasable(product);
 
     return (
         <article className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white transition hover:-translate-y-1 hover:shadow-card">
@@ -125,11 +143,11 @@ export function ProductCard({ product }) {
                     {product.name}
                 </Link>
                 <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-                    <Price value={product.price} />
+                    <Price value={product.price} onRequest={product.price_on_request} />
                     <button
                         type="button"
                         aria-label={t('product.add_to_cart')}
-                        disabled={!inStock}
+                        disabled={!canBuy}
                         onClick={() => addItem(product, 1)}
                         className="grid size-11 shrink-0 place-items-center rounded-lg bg-navy text-white transition hover:bg-accent disabled:bg-slate-200 disabled:text-slate-400"
                     >

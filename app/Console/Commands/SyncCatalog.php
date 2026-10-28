@@ -90,6 +90,9 @@ class SyncCatalog extends Command
                 }
             }
 
+            $price = (float) ($item['price'] ?? 0);
+            $inStock = ($item['in_stock'] ?? null) === '1' || ($item['in_stock'] ?? null) === 1 || ($item['in_stock'] ?? null) === true;
+
             $productRows[] = [
                 'id' => $id,
                 'product_code' => (string) ($item['product_code'] ?? ''),
@@ -97,8 +100,8 @@ class SyncCatalog extends Command
                 'name_ka' => $name,
                 'short_description_ka' => $short === '' ? null : $short,
                 'description_ka' => $full === '' ? null : $full,
-                'price' => (float) ($item['price'] ?? 0),
-                'in_stock' => ($item['in_stock'] ?? null) === '1' || ($item['in_stock'] ?? null) === 1 || ($item['in_stock'] ?? null) === true,
+                'price' => $price,
+                'in_stock' => $inStock,
                 'stock_level' => isset($item['amount']) ? (string) $item['amount'] : null,
                 'brand' => $brand,
                 'features' => json_encode($featuresArray, JSON_UNESCAPED_UNICODE),
@@ -165,6 +168,13 @@ class SyncCatalog extends Command
             $order++;
         }
 
+        $unpricedInStock = 0;
+        foreach ($productRows as $row) {
+            if ($row['in_stock'] && (float) $row['price'] <= 0) {
+                $unpricedInStock++;
+            }
+        }
+
         $this->info(sprintf(
             'categories upserted: %d | products upserted: %d | new: %d | gone: %d | brands found: %d',
             count($categoryRows),
@@ -173,6 +183,12 @@ class SyncCatalog extends Command
             $gone,
             count($brands)
         ));
+        if ($unpricedInStock > 0) {
+            $this->warn(sprintf(
+                'in-stock products with feed price 0.00: %d (shown as price on request)',
+                $unpricedInStock
+            ));
+        }
 
         $this->info(sprintf(
             'duration: %.2fs | peak memory: %.1f MB',
