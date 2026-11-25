@@ -121,7 +121,7 @@ export default function ProductPage() {
                         <StockBadge product={product} />
                     </div>
                     <div className="my-7 border-y border-line py-6">
-                        <Price value={product.price} size="large" onRequest={product.price_on_request} />
+                        <Price value={product.price} size="large" onRequest={product.price_on_request} product={product} showExpiredPrice />
                     </div>
                     <label className="mb-3 block text-sm font-bold text-navy">{t('product.qty')}</label>
                     <div className="flex flex-wrap gap-3">

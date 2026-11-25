@@ -70,3 +70,15 @@ export function uploadCarousel(file, index) {
     data.append('index', index);
     return axios.post('/api/admin/settings/upload-carousel', data).then((res) => res.data);
 }
+
+export function getAdminPromotions() {
+    return axios.get('/api/admin/promotions').then((res) => res.data);
+}
+
+export function saveAdminPromotion(payload) {
+    return axios.post('/api/admin/promotions', payload).then((res) => res.data);
+}
+
+export function endAdminPromotion(id) {
+    return axios.patch(`/api/admin/promotions/${id}/end`).then((res) => res.data);
+}

@@ -1,10 +1,11 @@
-import { BarChart3, Boxes, ClipboardList, FolderTree, Inbox, Settings } from 'lucide-react';
+import { BarChart3, Boxes, ClipboardList, FolderTree, Inbox, Percent, Settings } from 'lucide-react';
 import DashboardSection from './DashboardSection.jsx';
 import OrdersSection from './OrdersSection.jsx';
 import ProductsSection from './ProductsSection.jsx';
 import CategoriesSection from './CategoriesSection.jsx';
 import MessagesSection from './MessagesSection.jsx';
 import SettingsSection from './SettingsSection.jsx';
+import PromotionsSection from './PromotionsSection.jsx';
 
 export const ADMIN_SECTIONS = [
     { id: 'dashboard', icon: BarChart3, label: 'admin.dashboard', Component: DashboardSection },
@@ -12,6 +13,7 @@ export const ADMIN_SECTIONS = [
     { id: 'messages', icon: Inbox, label: 'admin.messages', Component: MessagesSection },
     { id: 'products', icon: Boxes, label: 'admin.products', Component: ProductsSection },
     { id: 'categories', icon: FolderTree, label: 'admin.categories', Component: CategoriesSection },
+    { id: 'promotions', icon: Percent, label: 'admin.promotions', Component: PromotionsSection },
     { id: 'settings', icon: Settings, label: 'admin.settings', Component: SettingsSection },
 ];
 

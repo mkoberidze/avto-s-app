@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\BrandPromotion;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -180,6 +181,53 @@ class CatalogTest extends TestCase
 
         $inStock = $this->getJson('/api/products?in_stock=1&per_page=60')->json();
         $this->assertSame(11, $inStock['total']);
+    }
+
+    public function test_active_brand_promotion_is_shown_in_catalog_and_product_detail(): void
+    {
+        $this->fakeFeed();
+        $this->artisan('catalog:sync')->assertSuccessful();
+        $startsAt = now();
+        BrandPromotion::query()->create([
+            'brand' => 'AJAX',
+            'discount_percent' => 15,
+            'duration_days' => 8,
+            'starts_at' => $startsAt,
+            'ends_at' => $startsAt->copy()->addDays(8),
+            'is_active' => true,
+        ]);
+
+        $listing = collect($this->getJson('/api/products?brand[]=AJAX&per_page=60')->json('products'))
+            ->firstWhere('id', '108');
+        $this->assertEquals(76.5, $listing['price']);
+        $this->assertEquals(90, $listing['original_price']);
+        $this->assertSame(15, $listing['discount_percent']);
+        $this->assertNotEmpty($listing['promotion_ends_at']);
+
+        $this->getJson('/api/products/108')
+            ->assertOk()
+            ->assertJsonPath('price', 76.5)
+            ->assertJsonPath('original_price', 90)
+            ->assertJsonPath('discount_percent', 15);
+    }
+
+    public function test_expired_brand_promotion_does_not_change_product_price(): void
+    {
+        $this->fakeFeed();
+        $this->artisan('catalog:sync')->assertSuccessful();
+        BrandPromotion::query()->create([
+            'brand' => 'AJAX',
+            'discount_percent' => 15,
+            'duration_days' => 8,
+            'starts_at' => now()->subDays(9),
+            'ends_at' => now()->subSecond(),
+            'is_active' => true,
+        ]);
+
+        $this->getJson('/api/products/108')
+            ->assertOk()
+            ->assertJsonPath('price', 90)
+            ->assertJsonMissingPath('discount_percent');
     }
 
     public function test_hidden_and_out_of_feed_products_never_appear(): void

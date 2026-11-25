@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { loginRedirect } from '../../lib/safePath.js';
-import { ExternalLink, Menu, ShieldCheck, X } from 'lucide-react';
+import { ExternalLink, Menu, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useI18n } from '../../contexts/i18n.js';
 import { ADMIN_SECTIONS, findAdminSection } from './sections.js';
@@ -36,7 +36,7 @@ export default function AdminLayout() {
             <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-navy text-white transition-transform lg:translate-x-0 ${sidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
                     <Link to="/" onClick={() => setSidebar(false)} className="flex items-center gap-3" aria-label={t('nav.home')}>
-                        <span className="grid size-10 place-items-center rounded-xl bg-accent"><ShieldCheck size={22} /></span>
+                        <img src="/images/sentra-mark.png" alt="" className="size-10 rounded-xl bg-white object-contain p-0.5" />
                         <span>
                             <strong className="block tracking-widest">SENTRA</strong>
                             <span className="text-xs text-white/50">{t('admin.panel')}</span>

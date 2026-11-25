@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Models\BrandPromotion;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -73,6 +74,30 @@ class OrderTest extends TestCase
         $item = Order::query()->first()->items()->first();
         $this->assertSame('100.00', (string) $item->price_snapshot);
         $this->assertSame('IP camera A', $item->name_snapshot);
+    }
+
+    public function test_order_uses_active_brand_discount_for_saved_price_and_total(): void
+    {
+        $this->syncFeed();
+        $startsAt = now();
+        BrandPromotion::query()->create([
+            'brand' => 'AJAX',
+            'discount_percent' => 15,
+            'duration_days' => 8,
+            'starts_at' => $startsAt,
+            'ends_at' => $startsAt->copy()->addDays(8),
+            'is_active' => true,
+        ]);
+        Sanctum::actingAs($this->user());
+
+        $response = $this->postJson('/api/orders', [
+            'customer_name' => 'Nika',
+            'address' => 'Tbilisi',
+            'items' => [['product_id' => 108, 'quantity' => 2]],
+        ])->assertCreated();
+
+        $this->assertEquals(153, $response->json('total'));
+        $this->assertSame('76.50', (string) Order::query()->first()->items()->first()->price_snapshot);
     }
 
     public function test_unavailable_products_rejected_and_nothing_saved(): void
