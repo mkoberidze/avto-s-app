@@ -2,6 +2,8 @@
 
 Georgian-only B2B shop. Catalog is synced from the Neotech JSON feed (`catalog:sync`). Customers request orders (no payment). Admins manage orders, catalog flags, settings, and contact messages.
 
+Admins can also create brand promotions from the Promotions section. A promotion starts immediately, applies to priced products of that brand, and expires after its selected duration.
+
 See [docs/DEPLOY.md](docs/DEPLOY.md) for production.
 
 ## Local setup (Sail)

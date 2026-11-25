@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
 import { useStorefrontData } from './StorefrontData.jsx';
 
@@ -15,7 +14,7 @@ export default function Footer() {
             <div className="container-shell grid gap-10 py-14 md:grid-cols-4">
                 <div className="md:col-span-2">
                     <div className="mb-4 flex items-center gap-2">
-                        <ShieldCheck />
+                        <img src="/images/sentra-mark.png" alt="" className="size-7 rounded bg-white object-contain p-0.5" />
                         <span className="text-xl font-black tracking-wider">{t('nav.brand')}</span>
                     </div>
                     <p className="max-w-md text-sm leading-7 text-white/65">{t('footer.text')}</p>

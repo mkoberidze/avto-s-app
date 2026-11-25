@@ -56,6 +56,33 @@ class AdminCatalogTest extends TestCase
         $this->getJson('/api/admin/products')->assertOk()->assertJsonStructure(['products', 'total', 'page', 'per_page']);
     }
 
+    public function test_admin_can_start_and_end_a_brand_promotion(): void
+    {
+        $this->syncFeed();
+        Sanctum::actingAs($this->admin());
+
+        $response = $this->postJson('/api/admin/promotions', [
+            'brand' => 'AJAX',
+            'discount_percent' => 15,
+            'duration_days' => 8,
+        ])->assertOk()
+            ->assertJsonPath('brand', 'AJAX')
+            ->assertJsonPath('discount_percent', 15)
+            ->assertJsonPath('duration_days', 8)
+            ->assertJsonPath('is_active', true);
+
+        $this->patchJson('/api/admin/promotions/'.$response->json('id').'/end')
+            ->assertOk()
+            ->assertJsonPath('is_active', false);
+    }
+
+    public function test_non_admin_cannot_manage_brand_promotions(): void
+    {
+        Sanctum::actingAs($this->user());
+
+        $this->getJson('/api/admin/promotions')->assertForbidden();
+    }
+
     public function test_admin_otp_login_returns_admin_role_only(): void
     {
         $admin = $this->admin();

@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AdminMessageController;
+use App\Http\Controllers\AdminPromotionController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/otp/request', [AuthController::class, 'requestOtp']);
@@ -55,4 +56,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::patch('/orders/{id}', [AdminOrderController::class, 'update'])->whereNumber('id');
     Route::get('/messages', [AdminMessageController::class, 'index']);
     Route::patch('/messages/{id}', [AdminMessageController::class, 'update'])->whereNumber('id');
+    Route::get('/promotions', [AdminPromotionController::class, 'index']);
+    Route::post('/promotions', [AdminPromotionController::class, 'store']);
+    Route::patch('/promotions/{id}/end', [AdminPromotionController::class, 'end'])->whereNumber('id');
 });

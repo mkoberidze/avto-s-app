@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\ServesOrderAttachments;
 use App\Models\Order;
 use App\Models\Product;
 use App\Support\UbillSms;
+use App\Support\BrandPromotions;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -102,6 +103,7 @@ class OrderController extends Controller
         $unavailable = [];
         $snapshots = [];
         $total = 0.0;
+        $promotions = BrandPromotions::activeMap();
 
         foreach ($merged as $productId => $quantity) {
             $product = Product::query()->find($productId);
@@ -120,7 +122,7 @@ class OrderController extends Controller
 
                 continue;
             }
-            $price = (string) $product->price;
+            $price = number_format(BrandPromotions::pricing($product, $promotions)['price'], 2, '.', '');
             $snapshots[] = [
                 'product_id' => $product->id,
                 'product_code' => $product->product_code,

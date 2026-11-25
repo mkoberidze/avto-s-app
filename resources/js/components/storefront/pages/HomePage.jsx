@@ -44,6 +44,20 @@ export default function HomePage() {
 
     return (
         <>
+            <section className="container-shell pt-6 sm:pt-8">
+                <Link
+                    to="/products?brand=AJAX&brand=EZVIZ"
+                    aria-label="Black Friday: 15% off AJAX and EZVIZ"
+                    className="block overflow-hidden rounded-xl border border-line transition hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                >
+                    <img
+                        src="/images/black-friday-banner.jpg"
+                        alt="Black Friday: 15% ფასდაკლება AJAX და EZVIZ პროდუქტებზე"
+                        className="block h-auto w-full"
+                    />
+                </Link>
+            </section>
+
             <Hero slides={slides} images={images} t={t} />
 
             <section className="container-shell section-space">

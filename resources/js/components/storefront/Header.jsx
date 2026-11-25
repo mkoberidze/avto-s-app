@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, LayoutDashboard, Menu, Search, ShieldCheck, ShoppingCart, User, X } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, Menu, Search, ShoppingCart, User, X } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useCart } from '../../contexts/CartContext.jsx';
@@ -38,12 +38,7 @@ export default function Header() {
             </div>
             <div className="container-shell flex h-18 items-center gap-4">
                 <Link to="/" className="flex shrink-0 items-center gap-2.5">
-                    {settings.logo_url ? (
-                        <img src={settings.logo_url} alt="" className="size-9 rounded-lg object-contain" />
-                    ) : (
-                        <span className="grid size-9 place-items-center rounded-lg bg-accent text-white"><ShieldCheck size={21} /></span>
-                    )}
-                    <span className="text-xl font-black tracking-wider text-navy">{t('nav.brand')}</span>
+                    <img src={settings.logo_url || '/images/sentra-logo.png'} alt={t('nav.brand')} className="h-14 w-20 object-contain object-left" />
                 </Link>
                 <form onSubmit={search} className="mx-auto hidden max-w-xl flex-1 md:flex">
                     <label className="sr-only" htmlFor="header-search">{t('nav.search')}</label>

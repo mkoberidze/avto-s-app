@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
@@ -22,16 +22,66 @@ export function isPurchasable(product) {
     return Boolean(product?.in_stock) && !isPriceOnRequest(product);
 }
 
-export function Price({ value, size = 'normal', className = '', onRequest = false }) {
+export function PromotionCountdown({ endsAt, now: currentNow }) {
+    const [clock, setClock] = useState(Date.now());
+    useEffect(() => {
+        if (currentNow != null) return undefined;
+        const interval = window.setInterval(() => setClock(Date.now()), 1000);
+        return () => window.clearInterval(interval);
+    }, [currentNow]);
+
+    const now = currentNow ?? clock;
+    const seconds = Math.max(0, Math.floor((Date.parse(endsAt) - now) / 1000));
+    if (!Number.isFinite(seconds) || seconds <= 0) return null;
+
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remaining = seconds % 60;
+    const time = days
+        ? `${days}დ ${hours}სთ ${minutes}წთ`
+        : `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remaining.toString().padStart(2, '0')}`;
+
+    return <span className="text-xs font-semibold text-accent">დარჩა {time}</span>;
+}
+
+export function Price({ value, size = 'normal', className = '', onRequest = false, product = null, showExpiredPrice = false }) {
     const t = useI18n();
+    const [now, setNow] = useState(Date.now());
+    useEffect(() => {
+        if (!product?.promotion_ends_at) return undefined;
+        const interval = window.setInterval(() => setNow(Date.now()), 1000);
+        return () => window.clearInterval(interval);
+    }, [product?.promotion_ends_at]);
+    const promotionEndsAt = Date.parse(product?.promotion_ends_at || '');
+    const hasPromotion = Number(product?.discount_percent) > 0 && Number(product?.original_price) > 0;
+    const promotionExpired = hasPromotion && promotionEndsAt <= now;
     const request = onRequest || isPriceOnRequest(value);
+    const promoActive = !request
+        && hasPromotion
+        && promotionEndsAt > now;
+    const displayValue = showExpiredPrice && promotionExpired ? product.original_price : value;
     const classes = request
         ? `min-w-0 font-medium leading-tight text-muted ${size === 'large' ? 'max-w-sm text-sm' : 'flex-1 text-[11px]'} ${className}`
         : `font-bold tracking-tight text-navy ${size === 'large' ? 'text-3xl' : 'text-lg'} ${className}`;
 
+    if (promoActive) {
+        const multiplier = Number(product.price) > 0 ? Number(value) / Number(product.price) : 1;
+        return (
+            <span className={`flex min-w-0 flex-col gap-1 ${className}`}>
+                <span className={`${classes} text-accent`}>{formatPrice(value)}</span>
+                <span className="flex flex-wrap items-center gap-2">
+                    <del className="text-xs font-medium text-muted">{formatPrice(Number(product.original_price) * multiplier)}</del>
+                    <span className="rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">-{product.discount_percent}%</span>
+                </span>
+                <PromotionCountdown endsAt={product.promotion_ends_at} now={now} />
+            </span>
+        );
+    }
+
     return (
         <span className={classes}>
-            {request ? t('catalog.price_on_request') : formatPrice(value)}
+            {request ? t('catalog.price_on_request') : formatPrice(displayValue)}
         </span>
     );
 }
@@ -143,7 +193,7 @@ export function ProductCard({ product }) {
                     {product.name}
                 </Link>
                 <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-                    <Price value={product.price} onRequest={product.price_on_request} />
+                    <Price value={product.price} onRequest={product.price_on_request} product={product} showExpiredPrice />
                     <button
                         type="button"
                         aria-label={t('product.add_to_cart')}
@@ -187,7 +237,7 @@ export function EmptyState({ title, body, action, cart = false }) {
 
 export function CartLines() {
     const t = useI18n();
-    const { items, setQuantity, removeItem } = useCart();
+    const { items, setQuantity, removeItem, now } = useCart();
 
     return (
         <div className="divide-y divide-line">
@@ -202,7 +252,7 @@ export function CartLines() {
                         </Link>
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                             <QuantityStepper value={item.quantity} onChange={(qty) => setQuantity(item.id, qty)} />
-                            <Price value={item.snapshot.price * item.quantity} />
+                            <Price value={livePrice(item.snapshot, now) * item.quantity} product={item.snapshot} />
                         </div>
                     </div>
                     <button type="button" aria-label={t('cart.remove')} onClick={() => removeItem(item.id)} className="self-start p-2 text-muted hover:text-red-600">
