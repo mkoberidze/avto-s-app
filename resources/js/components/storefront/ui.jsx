@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useI18n } from '../../contexts/i18n.js';
-import { useCart } from '../../contexts/CartContext.jsx';
+import { livePrice, useCart } from '../../contexts/CartContext.jsx';
 
 export function formatPrice(value) {
     const n = Number(value);
