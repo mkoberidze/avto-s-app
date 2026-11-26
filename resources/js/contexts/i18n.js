@@ -60,7 +60,7 @@ const messages = {
         'home.explore': 'პროდუქციის ნახვა',
         'home.consultation': 'კონსულტაცია',
         'home.categories': 'კატეგორიები',
-        'home.categories_text': 'ყველაფერი ობიექტის ერთიანი უსაფრთხოებისთვის',
+        'home.categories_text': 'ყველაფერი ობიექტის უსაფრთხოებისთვის',
         'home.featured': 'რჩეული პროდუქტები',
         'home.view_all': 'ყველას ნახვა',
         'home.products_count': 'პროდუქტი',

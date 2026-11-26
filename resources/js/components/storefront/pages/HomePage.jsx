@@ -6,12 +6,27 @@ import { useI18n } from '../../../contexts/i18n.js';
 import { navCategoryRoots, useStorefrontData } from '../StorefrontData.jsx';
 import { ProductCard, ProductSkeleton } from '../ui.jsx';
 
+const categoryCards = [
+    { name: 'ვიდეო მეთვალყურეობა', image: 'cctv.jpg', description: 'IP კამერები, ჩამწერები და ქსელური მოწყობილობები' },
+    { name: 'სახანძრო სისტემები', image: 'fire.jpg', description: 'პანელები, დეტექტორები და შეტყობინების მოწყობილობები' },
+    { name: 'დაშვების სისტემები', image: 'access.jpg', description: 'კონტროლერები, წამკითხველები და გასასვლელი ღილაკები' },
+    { name: 'დაცვითი სიგნალიზაცია', image: 'alarm.jpg', description: 'მოძრაობის სენსორები, პანელები და სირენები' },
+    { name: 'AJAX', image: 'ajax.jpg', description: 'უსადენო უსაფრთხოების სისტემები და აქსესუარები' },
+    { name: 'EZVIZ - ჭკვიანი სახლი', image: 'ezviz.jpg', description: 'ჭკვიანი კამერები და სახლის დისტანციური მართვა' },
+    { name: 'ქსელური მოწყობილობები', image: 'network.jpg', description: 'კომუტატორები, მარშრუტიზატორები და PoE მოწყობილობები' },
+    { name: 'კაბელები', image: 'cables.jpg', description: 'ქსელური და უსაფრთხოების სისტემების კაბელები' },
+];
+
 export default function HomePage() {
     const t = useI18n();
     const { settings, categories } = useStorefrontData();
     const [featured, setFeatured] = useState([]);
     const [loading, setLoading] = useState(true);
-    const images = (settings.carousel_images || []).filter(Boolean);
+    const images = [
+        settings.carousel_images?.[0] || 'https://images.unsplash.com/photo-1738724149254-bf9ef3d0ea45?auto=format&fit=crop&w=1800&q=85',
+        settings.carousel_images?.[1] || '/images/carousele-pic-2.avif',
+        settings.carousel_images?.[2] || 'https://images.unsplash.com/photo-1664289262417-93f2d037adff?auto=format&fit=crop&w=1800&q=85',
+    ];
 
     const tiles = navCategoryRoots(categories);
 
@@ -67,18 +82,31 @@ export default function HomePage() {
                         <h2 className="section-title">{t('home.categories_text')}</h2>
                     </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {tiles.map((cat, index) => (
-                        <Link key={cat.id} to={`/products/category/${cat.id}`} className="group relative min-h-64 overflow-hidden rounded-xl border border-line bg-surface p-7 transition hover:border-navy/30 hover:shadow-card">
-                            <span className="text-6xl font-black text-navy/5">{String(index + 1).padStart(2, '0')}</span>
-                            <div className="absolute inset-x-7 bottom-7">
-                                <div className={`mb-4 h-1 w-12 rounded-full ${index === 0 ? 'bg-accent' : 'bg-navy'}`} />
-                                <h3 className="text-xl font-bold text-navy break-words">{cat.name}</h3>
-                                <p className="mt-2 text-sm leading-6 text-muted">{cat.product_count} {t('home.products_count')}</p>
-                                <ArrowRight className="mt-5 transition group-hover:translate-x-1" size={18} />
-                            </div>
-                        </Link>
-                    ))}
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {categoryCards.map((card, index) => {
+                        const category = tiles.find((item) => item.name === card.name);
+                        if (!category) return null;
+
+                        return (
+                            <Link
+                                key={category.id}
+                                to={`/products/category/${category.id}`}
+                                className="group relative isolate flex min-h-[340px] min-w-0 flex-col justify-between overflow-hidden rounded-xl bg-navy p-6 text-white shadow-sm transition-shadow duration-300 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
+                            >
+                                <img src={`/images/categories/${card.image}`} alt="" className="absolute inset-0 -z-20 h-full w-full object-cover object-[65%_center] transition-transform duration-700 group-hover:scale-105 motion-reduce:transform-none" />
+                                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#061725] via-[#061725]/75 to-[#061725]/10" />
+                                <span className="w-fit rounded-md border border-white/30 bg-navy/70 px-3 py-1.5 text-sm font-semibold tracking-widest">{String(index + 1).padStart(2, '0')}</span>
+                                <div className="mt-20">
+                                    <div className="mb-4 h-1 w-10 rounded-full bg-accent transition-all group-hover:w-16" />
+                                    <h3 className="text-xl font-bold leading-snug">{card.name}</h3>
+                                    <p className="mt-3 text-sm leading-6 text-slate-200">{card.description}</p>
+                                    <span className="mt-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-navy/60 transition-colors group-hover:border-accent group-hover:bg-accent-dark">
+                                        <ArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                                    </span>
+                                </div>
+                            </Link>
+                        );
+                    })}
                 </div>
             </section>
 
@@ -128,7 +156,7 @@ function Hero({ slides, images, t }) {
     useEffect(() => {
         const timer = setInterval(() => setSlide((s) => (s + 1) % slides.length), 6000);
         return () => clearInterval(timer);
-    }, [slides.length]);
+    }, [slide, slides.length]);
 
     function move(direction) {
         setSlide((slide + direction + slides.length) % slides.length);
@@ -144,9 +172,9 @@ function Hero({ slides, images, t }) {
                 }}
                 className="relative min-h-[31rem] overflow-hidden rounded-2xl bg-navy sm:min-h-[34rem]"
             >
-                {images.map((image, index) => (
-                    <img key={image} src={image} alt="" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${index === slide % Math.max(images.length, 1) ? 'opacity-45' : 'opacity-0'}`} />
-                ))}
+                {images.map((image, index) => image ? (
+                    <img key={index} src={image} alt="" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${index === slide ? 'opacity-45' : 'opacity-0'}`} />
+                ) : null)}
                 <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/75 to-navy/10" />
                 <div className="relative z-10 flex min-h-[31rem] max-w-3xl flex-col justify-center px-6 py-16 text-white sm:min-h-[34rem] sm:px-12 lg:px-20">
                     <div className="mb-5 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-white/70">
